@@ -828,6 +828,8 @@ if __name__ == '__main__':
                                     # TODO: TEMPORARY: PRETRAINING
                                     pretrained_path = os.path.join(pretrained_models_path, str(fold),
                                                                    config.filename_best_model_pth)
+                                    print("PRETRAINED MODEL PATH")
+                                    print(pretrained_path)
                                     start = time.time()
 
                                     # Cross-Validation

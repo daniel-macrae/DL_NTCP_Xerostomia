@@ -81,7 +81,7 @@ perform_stratified_sampling_full = False  # (Stratified Sampling). Whether or no
 strata_groups = ['HN35_Xerostomia_M12_class', 'CT+C_available', 'CT_Artefact', 'Photons', 'Loctum2_v2']  #, 'Year_treatment_2cat']  # (Stratified Sampling). Note: order does not matter.
 split_col = 'Split'  # (Stratified Sampling). Column of the stratified sampling outcome ('train', 'val', 'test').
 cv_strata_groups = strata_groups  # (TODO: implement) Stratified Cross-Validation groups
-cv_folds = 1  # (Cross-Validation) If cv_folds=1, then perform train-val-test-split.
+cv_folds = 10  # (Cross-Validation) If cv_folds=1, then perform train-val-test-split.
 cv_type = 'stratified'  # (Stratified CV, only if cv_folds > 1) None | 'stratified'. Stratification is performed on endpoint value.
 dataset_type = 'cache'  # 'standard' | 'cache' | 'persistent'. If None, then 'standard'.
 # Cache: caches data in RAM storage. Persistent: caches data in disk storage instead of RAM storage.
