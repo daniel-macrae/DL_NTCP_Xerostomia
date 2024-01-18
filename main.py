@@ -391,26 +391,26 @@ def train(model, train_dataloader, val_dataloader, test_dataloader, optimizer, o
                 else:
                     train_loss.backward()
 
-            # Perform gradient clipping
-            # https://stackoverflow.com/questions/54716377/how-to-do-gradient-clipping-in-pytorch
-            if grad_max_norm is not None:
-                torch.nn.utils.clip_grad_norm_(parameters=model.parameters(), max_norm=grad_max_norm)
+                # Perform gradient clipping
+                # https://stackoverflow.com/questions/54716377/how-to-do-gradient-clipping-in-pytorch
+                if grad_max_norm is not None:
+                    torch.nn.utils.clip_grad_norm_(parameters=model.parameters(), max_norm=grad_max_norm)
 
-            # Update model weights
-            optimizer.step()
+                # Update model weights
+                optimizer.step()
 
-            # Reset the .grad fields of our parameters to None after use to break the cycle and avoid the memory leak
-            if optimizer_name in ['ada_hessian']:
-                for p in model.parameters():
-                    p.grad = None
+                # Reset the .grad fields of our parameters to None after use to break the cycle and avoid the memory leak
+                if optimizer_name in ['ada_hessian']:
+                    for p in model.parameters():
+                        p.grad = None
 
-            # Scheduler: step() called after every batch update
-            # Note: some schedulers generally update the LR every epoch instead of every batch, but epoch-wise update
-            # will mess up LearningRateWarmUp. Batch-wise LR update is always valid and works with LearningRateWarmUp.
-            if scheduler_name in ['cosine', 'exponential', 'step']:
-                scheduler.step(epoch + (i + 1) / train_num_iterations)
-            elif scheduler_name in ['cyclic']:
-                scheduler.step()
+                # Scheduler: step() called after every batch update
+                # Note: some schedulers generally update the LR every epoch instead of every batch, but epoch-wise update
+                # will mess up LearningRateWarmUp. Batch-wise LR update is always valid and works with LearningRateWarmUp.
+                if scheduler_name in ['cosine', 'exponential', 'step']:
+                    scheduler.step(epoch + (i + 1) / train_num_iterations)
+                elif scheduler_name in ['cyclic']:
+                    scheduler.step()
 
             # Evaluate model (training set)
             train_loss_value += train_loss.item()
