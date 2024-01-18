@@ -1145,7 +1145,7 @@ if __name__ == '__main__':
                                         if (fold == cv_folds - 1) and (cv_folds > 1):
                                             # Make sure that test_y_sum and test_y_lr_sum have only `num_classes` different tensors:
                                             # e.g. cv_folds = 5: {(0.0, 5.0), (5.0, 0.0)}
-                                            if max_epochs > 0:
+                                            if max_epochs >= 0:                          ### DANIEL
                                                 assert len(set([tuple(x.tolist()) for x in test_y_sum])) == num_classes
                                                 test_y_pred_ens = [x / cv_folds for x in test_y_pred_sum]
                                                 test_y_ens = [x / cv_folds for x in test_y_sum]
@@ -1168,7 +1168,7 @@ if __name__ == '__main__':
                                                           model_name='lr_all',
                                                           exp_dir=exp_dir, logger=logger)
 
-                                    if max_epochs > 0:
+                                    if max_epochs >= 0:                          ### DANIEL
                                         # Create results.csv
                                         # best_val_auc_idx = val_auc_values.index(max(val_auc_values))  # alternative: best_epoch (- 1)
                                         # assert max(val_auc_values) == val_auc_values[best_val_auc_idx]
