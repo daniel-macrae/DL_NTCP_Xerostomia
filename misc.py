@@ -948,10 +948,10 @@ def save_predictions(patient_ids, y_pred_list, y_true_list, mode_list, num_class
 
 
     # Print outputs
-    # logger.my_print('Model_name: {}.'.format(model_name))
-    # logger.my_print('patient_ids: {}.'.format(patient_ids))
-    # logger.my_print('y_pred_list: {}.'.format(y_pred_list))
-    # logger.my_print('y_true_list: {}.'.format(y_true_list))
+    logger.my_print('Model_name: {}.'.format(model_name))
+    logger.my_print('patient_ids: {}.'.format(patient_ids))
+    logger.my_print('y_pred_list: {}.'.format(y_pred_list))
+    logger.my_print('y_true_list: {}.'.format(y_true_list))
 
     # Convert to CPU
     y_pred = [x.cpu().numpy() for x in y_pred_list]

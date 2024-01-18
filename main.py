@@ -996,7 +996,7 @@ if __name__ == '__main__':
                                     # best_val_auc_idx = best_epoch - 1  # alternative: val_auc_values.index(max(val_auc_values))
                                     # assert max(val_auc_values) == val_auc_values[best_val_auc_idx]
 
-                                    if max_epochs > 0:
+                                    if max_epochs >= 0:
                                         # Plot training and internal validation losses
                                         y_list = [[train_loss_values, val_loss_values],
                                                   [train_mse_values, val_mse_values],
