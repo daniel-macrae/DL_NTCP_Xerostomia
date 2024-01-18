@@ -367,17 +367,19 @@ def train(model, train_dataloader, val_dataloader, test_dataloader, optimizer, o
                 train_loss = loss_function(train_outputs,
                                            torch.reshape(train_labels, train_outputs.shape).to(train_outputs.dtype))
 
-            if optimizer_name in ['ada_hessian']:
-                # https://github.com/pytorch/pytorch/issues/4661
-                # https://discuss.pytorch.org/t/how-to-backward-the-derivative/17662?u=bpetruzzo
-                # Using backward() with create_graph=True will create a reference cycle between the parameter and its gradient
-                # which can cause a memory leak. We recommend using autograd.grad when creating the graph to avoid this.
-                # However, if we do use backward(create_graph=True), then we have to make sure to reset the
-                # .grad fields of our parameters to None after use to break the cycle and avoid the leak.
-                train_loss.backward(create_graph=True)
-                # torch.autograd.grad(train_loss, model.parameters(), create_graph=True)
-            else:
-                train_loss.backward()
+
+            if config.actually_train == True:
+                if optimizer_name in ['ada_hessian']:
+                    # https://github.com/pytorch/pytorch/issues/4661
+                    # https://discuss.pytorch.org/t/how-to-backward-the-derivative/17662?u=bpetruzzo
+                    # Using backward() with create_graph=True will create a reference cycle between the parameter and its gradient
+                    # which can cause a memory leak. We recommend using autograd.grad when creating the graph to avoid this.
+                    # However, if we do use backward(create_graph=True), then we have to make sure to reset the
+                    # .grad fields of our parameters to None after use to break the cycle and avoid the leak.
+                    train_loss.backward(create_graph=True)
+                    # torch.autograd.grad(train_loss, model.parameters(), create_graph=True)
+                else:
+                    train_loss.backward()
 
             # Perform gradient clipping
             # https://stackoverflow.com/questions/54716377/how-to-do-gradient-clipping-in-pytorch

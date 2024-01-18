@@ -31,6 +31,8 @@ from data_preproc.data_preproc_functions import create_folder_if_not_exists
 # Whether to perform quick run for checking workability of code or not
 perform_test_run = False
 
+actually_train = False
+
 # Set directory contexts
 root_path = os.getcwd()
 models_dir = os.path.join(root_path, 'models')
@@ -248,7 +250,7 @@ manual_lr = [1e-3, 1e-5, 1e-6]  # (Manual_LR) LR per epoch, if epoch > len(manua
 
 # Training config
 nr_runs = 1
-max_epochs = 0
+max_epochs = 2
 batch_size = 8
 max_batch_size = 16
 eval_interval = 1
