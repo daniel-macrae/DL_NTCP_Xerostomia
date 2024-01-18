@@ -850,7 +850,7 @@ if __name__ == '__main__':
                                             if cv_type == 'stratified':
                                                 logger.my_print('Performing stratified {}-fold CV.'.format(cv_folds))
                                                 # Create stratified CV class
-                                                cv_object = StratifiedKFold(n_splits=cv_folds, shuffle=False, random_state=seed)
+                                                cv_object = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=seed)
                                                 # Determine endpoint value to stratify on
                                                 cv_y = [x['label'] for x in cv_dict]
                                                 # For each fold: determine train and val indices
