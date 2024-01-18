@@ -439,7 +439,7 @@ def train(model, train_dataloader, val_dataloader, test_dataloader, optimizer, o
 
             # Perform independent testing
             test_loss_value, test_mse_value, test_auc_value = validate(model=model, dataloader=test_dataloader,
-                                                                       mode='independent testing', logger=logger,
+                                                                       mode='test', logger=logger,
                                                                        mean=mean, std=std,
                                                                        save_outputs=True)
             test_loss_values_list.append(test_loss_value)
@@ -730,12 +730,12 @@ if __name__ == '__main__':
                         [                            
                             
                             [1, 1.5],
-                            [1, 2],
+                            #[1, 2],
                         ],
                         [                            
                             
                             [1, 0, 1, 1, 0, 0],
-                            [1, 0, 1, 1, 0, 0],
+                            #[1, 0, 1, 1, 0, 0],
                             
                     ]):
                         # excl = '_excl_12'
@@ -758,7 +758,7 @@ if __name__ == '__main__':
                         else:
                             data_preproc_config.filename_exclude_patients_csv = 'exclude_patients_umcg.csv'
 
-                        for cv_folds, seed in zip([10], [17]):
+                        for cv_folds, seed in zip([1], [17]):
 
                             # for optimizer_name in ['adam', 'rmsprop', 'acc_sgd', 'ada_belief', 'ada_bound',
                             #                        'ada_bound_w', 'ada_mod', 'apollo', 'diff_grad', 'madgrad',
