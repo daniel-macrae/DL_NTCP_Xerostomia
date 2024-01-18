@@ -419,9 +419,12 @@ def train(model, train_dataloader, val_dataloader, test_dataloader, optimizer, o
 
 
             ### DANIEL !!!
-            del train_inputs
-            del train_features
-            del train_labels
+            if (epoch + 1 == 1) or ((epoch + 1) % config.plot_interval == 0):
+                pass
+            else:
+                del train_inputs
+                del train_features
+                del train_labels
             torch.cuda.empty_cache()
 
         # Averaging training loss
