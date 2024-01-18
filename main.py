@@ -31,6 +31,9 @@ from data_preproc.checks.check_data_preproc import plot_multiple_arrs
 from models.logistic_regression import run_logistic_regression
 
 
+#torch.multiprocessing.set_sharing_strategy('file_system')
+
+
 def initialize(torch_version, device, create_folders=True):
     """
     Set up experiment and save the experiment path to be able to save results.
@@ -679,7 +682,10 @@ if __name__ == '__main__':
 
     lmn = 0
     excl = ''
-
+    
+    with torch.no_grad():
+      torch.cuda.empty_cache()
+    
     for seed in [4]:
         for perform_stratified_sampling_full, filename_stratified_sampling_test_csv, filename_stratified_sampling_full_csv in zip(
                 [False],

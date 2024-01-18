@@ -490,7 +490,7 @@ def get_model(model_name, num_ohe_classes, channels, depth, height, width, n_fea
     # Load pretrained model weights
     if pretrained_path is not None:
         #checkpoint = torch.load(pretrained_path)
-        checkpoint = torch.load(pretrained_path, map_location=torch.device('cpu'))
+        checkpoint = torch.load(pretrained_path, map_location=config.device)
         
 
 
