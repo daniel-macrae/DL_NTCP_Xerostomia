@@ -439,7 +439,7 @@ def train(model, train_dataloader, val_dataloader, test_dataloader, optimizer, o
 
             # Perform independent testing
             test_loss_value, test_mse_value, test_auc_value = validate(model=model, dataloader=test_dataloader,
-                                                                       mode='test', logger=logger,
+                                                                       mode='independent testing', logger=logger,
                                                                        mean=mean, std=std,
                                                                        save_outputs=True)
             test_loss_values_list.append(test_loss_value)
