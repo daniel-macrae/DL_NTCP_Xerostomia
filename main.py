@@ -202,6 +202,8 @@ def validate(model, dataloader, mode, logger, mean, std, save_outputs=True,):
             # Make predictions
             outputs = model(x=inputs, features=features)
 
+            
+
             try:
                 # Cross-Entropy, Ranking, Custom
                 loss = loss_function(outputs, labels)
@@ -216,6 +218,12 @@ def validate(model, dataloader, mode, logger, mean, std, save_outputs=True,):
 
             # Save patient_ids
             patient_ids += data['patient_id']
+
+            ### DANIEL !!!
+            del inputs
+            del features
+            del labels
+            torch.cuda.empty_cache()
 
         # Averaging internal validation loss
         loss_value /= num_iterations
@@ -370,6 +378,12 @@ def train(model, train_dataloader, val_dataloader, test_dataloader, optimizer, o
                 train_loss = loss_function(train_outputs,
                                            torch.reshape(train_labels, train_outputs.shape).to(train_outputs.dtype))
 
+
+            ### DANIEL !!!
+            del train_inputs
+            del train_features
+            del train_labels
+            torch.cuda.empty_cache()
 
             if config.actually_train == True:
                 if optimizer_name in ['ada_hessian']:
