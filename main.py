@@ -783,7 +783,7 @@ if __name__ == '__main__':
                         else:
                             data_preproc_config.filename_exclude_patients_csv = 'exclude_patients_umcg.csv'
 
-                        for cv_folds, seed in zip([1], [17]):
+                        for cv_folds, seed in zip([config.cv_folds], [config.seed]):
 
                             # for optimizer_name in ['adam', 'rmsprop', 'acc_sgd', 'ada_belief', 'ada_bound',
                             #                        'ada_bound_w', 'ada_mod', 'apollo', 'diff_grad', 'madgrad',
