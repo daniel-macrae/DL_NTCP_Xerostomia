@@ -378,13 +378,6 @@ def train(model, train_dataloader, val_dataloader, test_dataloader, optimizer, o
                 train_loss = loss_function(train_outputs,
                                            torch.reshape(train_labels, train_outputs.shape).to(train_outputs.dtype))
 
-
-            ### DANIEL !!!
-            del train_inputs
-            del train_features
-            del train_labels
-            torch.cuda.empty_cache()
-
             if config.actually_train == True:
                 if optimizer_name in ['ada_hessian']:
                     # https://github.com/pytorch/pytorch/issues/4661
@@ -423,6 +416,13 @@ def train(model, train_dataloader, val_dataloader, test_dataloader, optimizer, o
             train_loss_value += train_loss.item()
             train_y_pred = torch.cat([train_y_pred, train_outputs], dim=0)
             train_y = torch.cat([train_y, train_labels], dim=0)
+
+
+            ### DANIEL !!!
+            del train_inputs
+            del train_features
+            del train_labels
+            torch.cuda.empty_cache()
 
         # Averaging training loss
         train_loss_value /= train_num_iterations
