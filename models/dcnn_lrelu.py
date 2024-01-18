@@ -144,6 +144,7 @@ class DCNN_LReLU(torch.nn.Module):
         else:
             self.out_layer = Output(in_features=linear_units[-1] + self.n_features, out_features=num_classes,
                                     bias=use_bias)
+        #self.out_layer                                      ##### DANIEL
         # self.out_layer.__class__.__name__ = 'Output'
 
     def forward(self, x, features):

@@ -2,6 +2,7 @@
 Miscellaneous functions.
 """
 import os
+import math
 import torch
 import optimizers
 import numpy as np
@@ -91,6 +92,7 @@ class DiceLoss(torch.nn.Module):
     """
     https://neptune.ai/blog/pytorch-loss-functions
     """
+
     def __init__(self, weight=None, size_average=True):
         super(DiceLoss, self).__init__()
         self.softmax_act = torch.nn.Softmax(dim=-1)
@@ -132,6 +134,7 @@ class F1_Loss(torch.nn.Module):
     - https://discuss.pytorch.org/t/calculating-precision-recall-and-f1-score-in-case-of-multi-label-classification/28265/6
     - http://www.ryanzhang.info/python/writing-your-own-loss-function-module-for-pytorch/
     '''
+
     def __init__(self, epsilon=1e-7):
         super().__init__()
         self.epsilon = epsilon
@@ -186,6 +189,7 @@ class RankingLoss(torch.nn.Module):
     y: tensor([ 1.,  1.,  1., -1., -1.,  1.,  1.], device='cuda:0')
 
     """
+
     def __init__(self, reduction):
         super().__init__()
         self.softmax_act = torch.nn.Softmax(dim=-1)
@@ -250,10 +254,12 @@ class CustomLoss(torch.nn.Module):
         self.f1 = F1_Loss().to(device)
         self.l1 = L1Loss(reduction=reduction)
         self.ranking = RankingLoss(reduction=reduction)
+        self.soft_auc = SoftAUCLoss()
         self.loss_weights = loss_weights
 
     def forward(self, y_pred, y_true):
-        fcns = [self.ce, self.dice, self.f1, self.l1, self.ranking]
+        fcns = [self.ce, self.dice, self.f1, self.l1, self.ranking, self.soft_auc]
+
         loss = 0
         for i, (w, fcn) in enumerate(zip(self.loss_weights, fcns)):
             if w != 0:
@@ -320,118 +326,91 @@ def get_model(model_name, num_ohe_classes, channels, depth, height, width, n_fea
                      sum([x[2] == 2 for x in strides])]
 
     if model_name == 'cnn_lrelu':
-        model = CNN_LReLU(n_input_channels=channels, depth=depth, height=height, width=width,
-                          n_features=n_features, num_classes=num_classes, filters=filters,
-                          kernel_sizes=kernel_sizes,
-                          strides=strides, pad_value=pad_value,
-                          n_down_blocks=n_down_blocks,
-                          lrelu_alpha=lrelu_alpha, dropout_p=dropout_p,
-                          pooling_conv_filters=pooling_conv_filters, perform_pooling=perform_pooling,
-                          linear_units=linear_units, use_bias=use_bias)
+        model = CNN_LReLU(n_input_channels=channels, depth=depth, height=height, width=width, n_features=n_features,
+                          num_classes=num_classes, filters=filters, kernel_sizes=kernel_sizes, strides=strides,
+                          pad_value=pad_value, n_down_blocks=n_down_blocks, lrelu_alpha=lrelu_alpha,
+                          dropout_p=dropout_p, pooling_conv_filters=pooling_conv_filters,
+                          perform_pooling=perform_pooling, linear_units=linear_units, use_bias=use_bias)
     elif model_name == 'convnext_tiny':
-        # # https://github.com/facebookresearch/ConvNeXt/blob/main/models/convnext.py
-        model = ConvNeXt(in_chans=channels, n_features=n_features, num_classes=num_classes, depths=[3, 3, 9, 3], dims=[96, 192, 384, 768])
+        # https://github.com/facebookresearch/ConvNeXt/blob/main/models/convnext.py
+        model = ConvNeXt(in_chans=channels, n_features=n_features, num_classes=num_classes, depths=[3, 3, 9, 3],
+                         dims=[96, 192, 384, 768])
     elif model_name == 'convnext_small':
-        model = ConvNeXt(in_chans=channels, n_features=n_features, num_classes=num_classes, depths=[3, 3, 27, 3], dims=[96, 192, 384, 768])
+        model = ConvNeXt(in_chans=channels, n_features=n_features, num_classes=num_classes, depths=[3, 3, 27, 3],
+                         dims=[96, 192, 384, 768])
     elif model_name == 'convnext_base':
-        model = ConvNeXt(in_chans=channels, n_features=n_features, num_classes=num_classes, depths=[3, 3, 27, 3], dims=[128, 256, 512, 1024])
+        model = ConvNeXt(in_chans=channels, n_features=n_features, num_classes=num_classes, depths=[3, 3, 27, 3],
+                         dims=[128, 256, 512, 1024])
     elif model_name == 'dcnn_lrelu':
-        model = DCNN_LReLU(n_input_channels=channels, depth=depth, height=height, width=width,
-                           n_features=n_features, num_classes=num_classes, filters=filters,
-                           kernel_sizes=kernel_sizes,
-                           strides=strides, pad_value=pad_value,
-                           n_down_blocks=n_down_blocks,
-                           lrelu_alpha=lrelu_alpha, dropout_p=dropout_p,
-                           pooling_conv_filters=pooling_conv_filters,
-                           perform_pooling=perform_pooling,
-                           linear_units=linear_units,
-                           # NEW
+        model = DCNN_LReLU(n_input_channels=channels, depth=depth, height=height, width=width, n_features=n_features,
+                           num_classes=num_classes, filters=filters, kernel_sizes=kernel_sizes, strides=strides,
+                           pad_value=pad_value, n_down_blocks=n_down_blocks, lrelu_alpha=lrelu_alpha,
+                           dropout_p=dropout_p, pooling_conv_filters=pooling_conv_filters,
+                           perform_pooling=perform_pooling, linear_units=linear_units,
                            clinical_variables_position=clinical_variables_position,
                            clinical_variables_linear_units=clinical_variables_linear_units,
-                           clinical_variables_dropout_p=clinical_variables_dropout_p,
-                           #####
-                           use_bias=use_bias)
+                           clinical_variables_dropout_p=clinical_variables_dropout_p, use_bias=use_bias)
     elif model_name == 'dcnn_dws_lrelu':
         model = DCNN_DWS_LReLU(n_input_channels=channels, depth=depth, height=height, width=width,
                                n_features=n_features, num_classes=num_classes, filters=filters,
-                               kernel_sizes=kernel_sizes,
-                               strides=strides, pad_value=pad_value,
-                               n_down_blocks=n_down_blocks,
-                               lrelu_alpha=lrelu_alpha, dropout_p=dropout_p,
-                               pooling_conv_filters=pooling_conv_filters,
-                               perform_pooling=perform_pooling,
+                               kernel_sizes=kernel_sizes, strides=strides, pad_value=pad_value,
+                               n_down_blocks=n_down_blocks, lrelu_alpha=lrelu_alpha, dropout_p=dropout_p,
+                               pooling_conv_filters=pooling_conv_filters, perform_pooling=perform_pooling,
                                linear_units=linear_units, use_bias=use_bias)
     elif model_name == 'dcnn_lrelu_ln':
-        model = DCNN_LReLU_LN(n_input_channels=channels, depth=depth, height=height, width=width,
-                              n_features=n_features, num_classes=num_classes, filters=filters,
-                              kernel_sizes=kernel_sizes,
-                              strides=strides, pad_value=pad_value,
-                              n_down_blocks=n_down_blocks,
-                              lrelu_alpha=lrelu_alpha, dropout_p=dropout_p,
-                              pooling_conv_filters=pooling_conv_filters,
-                              perform_pooling=perform_pooling,
-                              linear_units=linear_units, use_bias=use_bias)
+        model = DCNN_LReLU_LN(n_input_channels=channels, depth=depth, height=height, width=width, n_features=n_features,
+                              num_classes=num_classes, filters=filters, kernel_sizes=kernel_sizes, strides=strides,
+                              pad_value=pad_value, n_down_blocks=n_down_blocks, lrelu_alpha=lrelu_alpha,
+                              dropout_p=dropout_p, pooling_conv_filters=pooling_conv_filters,
+                              perform_pooling=perform_pooling, linear_units=linear_units, use_bias=use_bias)
     elif model_name == 'dcnn_lrelu_gn':
-        model = DCNN_LReLU_GN(n_input_channels=channels, depth=depth, height=height, width=width,
-                              n_features=n_features, num_classes=num_classes, filters=filters,
-                              kernel_sizes=kernel_sizes,
-                              strides=strides, pad_value=pad_value,
-                              n_down_blocks=n_down_blocks,
-                              lrelu_alpha=lrelu_alpha, dropout_p=dropout_p,
-                              pooling_conv_filters=pooling_conv_filters,
-                              perform_pooling=perform_pooling,
-                              linear_units=linear_units, use_bias=use_bias)
+        model = DCNN_LReLU_GN(n_input_channels=channels, depth=depth, height=height, width=width, n_features=n_features,
+                              num_classes=num_classes, filters=filters, kernel_sizes=kernel_sizes, strides=strides,
+                              pad_value=pad_value, n_down_blocks=n_down_blocks, lrelu_alpha=lrelu_alpha,
+                              dropout_p=dropout_p, pooling_conv_filters=pooling_conv_filters,
+                              perform_pooling=perform_pooling, linear_units=linear_units, use_bias=use_bias)
     elif model_name == 'dcnn_selu':
-        model = DCNN_SELU(n_input_channels=channels, depth=depth, height=height, width=width,
-                          n_features=n_features, num_classes=num_classes, filters=filters,
-                          kernel_sizes=kernel_sizes,
-                          strides=strides, pad_value=pad_value,
-                          n_down_blocks=n_down_blocks,
-                          dropout_p=dropout_p,
-                          pooling_conv_filters=pooling_conv_filters,
-                          perform_pooling=perform_pooling,
+        model = DCNN_SELU(n_input_channels=channels, depth=depth, height=height, width=width, n_features=n_features,
+                          num_classes=num_classes, filters=filters, kernel_sizes=kernel_sizes, strides=strides,
+                          pad_value=pad_value, n_down_blocks=n_down_blocks, dropout_p=dropout_p,
+                          pooling_conv_filters=pooling_conv_filters, perform_pooling=perform_pooling,
                           linear_units=linear_units, use_bias=use_bias)
     elif model_name in ['efficientnet-b{}'.format(i) for i in range(9)]:
         # https://github.com/shijianjian/EfficientNet-PyTorch-3D
         model = EfficientNet3D.from_name(model_name=model_name, n_features=n_features,
-                                         override_params={'num_classes': num_classes},
-                                         in_channels=channels)
+                                         override_params={'num_classes': num_classes}, in_channels=channels)
     elif model_name in ['efficientnetv2_{}'.format(i) for i in ['xs', 's', 'm', 'l', 'xl']]:
         # https://github.com/d-li14/efficientnetv2.pytorch/blob/main/effnetv2.py
-        model = get_efficientnetv2(model_name=model_name, channels=channels, n_features=n_features, num_classes=num_classes, 
+        model = get_efficientnetv2(model_name=model_name, channels=channels, n_features=n_features,
+                                   num_classes=num_classes, dropout_p=dropout_p, linear_units=linear_units,
                                    clinical_variables_position=clinical_variables_position,
                                    clinical_variables_linear_units=clinical_variables_linear_units,
-                                   clinical_variables_dropout_p=clinical_variables_dropout_p, use_bias=use_bias,lrelu_alpha=lrelu_alpha, 
-                                   dropout_p=dropout_p, linear_units=linear_units)
+                                   clinical_variables_dropout_p=clinical_variables_dropout_p, use_bias=use_bias,
+                                   lrelu_alpha=lrelu_alpha)
     elif model_name in ['efficientnetv2_{}_selu'.format(i) for i in ['s', 'm', 'l', 'xl']]:
         # https://github.com/d-li14/efficientnetv2.pytorch/blob/main/effnetv2.py
-        model = get_efficientnetv2_selu(model_name=model_name, channels=channels, n_features=n_features, num_classes=num_classes)
+        model = get_efficientnetv2_selu(model_name=model_name, channels=channels, n_features=n_features,
+                                        num_classes=num_classes)
     elif model_name == 'mlp':
         assert n_features > 0
-        model = MLP(n_features=n_features, num_classes=num_classes, lrelu_alpha=lrelu_alpha,
-                    dropout_p=dropout_p, linear_units=linear_units, use_bias=use_bias)
+        model = MLP(n_features=n_features, num_classes=num_classes, lrelu_alpha=lrelu_alpha, dropout_p=dropout_p,
+                    linear_units=linear_units, use_bias=use_bias)
     elif model_name == 'resnet_lrelu':
-        model = get_resnet_lrelu(model_depth=10, channels=channels, n_features=n_features, lrelu_alpha=lrelu_alpha, num_classes=num_classes, filters=filters,
-                                 # NEW
+        model = get_resnet_lrelu(model_depth=10, channels=channels, n_features=n_features, lrelu_alpha=lrelu_alpha,
+                                 num_classes=num_classes, filters=filters,
+                                 dropout_p=dropout_p, linear_units=linear_units,
                                  clinical_variables_position=clinical_variables_position,
                                  clinical_variables_linear_units=clinical_variables_linear_units,
-                                 clinical_variables_dropout_p=clinical_variables_dropout_p,
-                                 use_bias=use_bias, dropout_p=dropout_p, linear_units=linear_units
-                                 #####
-                                 )
+                                 clinical_variables_dropout_p=clinical_variables_dropout_p)
     elif model_name == 'resnet_dcnn_lrelu':
         model = ResNet_DCNN_LReLU(n_input_channels=channels, depth=depth, height=height, width=width,
                                   n_features=n_features, num_classes=num_classes, filters=filters,
                                   kernel_sizes=kernel_sizes, strides=strides, pad_value=pad_value,
                                   n_down_blocks=n_down_blocks, lrelu_alpha=lrelu_alpha, dropout_p=dropout_p,
                                   pooling_conv_filters=pooling_conv_filters, perform_pooling=perform_pooling,
-                                  linear_units=linear_units,
-                                  # NEW
-                                  clinical_variables_position=clinical_variables_position,
+                                  linear_units=linear_units, clinical_variables_position=clinical_variables_position,
                                   clinical_variables_linear_units=clinical_variables_linear_units,
-                                  clinical_variables_dropout_p=clinical_variables_dropout_p,
-                                  #####
-                                  use_bias=use_bias)
+                                  clinical_variables_dropout_p=clinical_variables_dropout_p, use_bias=use_bias)
     elif model_name == 'resnet_dcnn_dws_lrelu_v2':
         model = ResNet_DCNN_DWS_LReLU_V2(n_input_channels=channels, depth=depth, height=height, width=width,
                                          n_features=n_features, num_classes=num_classes, filters=filters,
@@ -463,37 +442,32 @@ def get_model(model_name, num_ohe_classes, channels, depth, height, width, n_fea
     elif model_name == 'resnet_mp_lrelu':
         model = ResNet_MP_LReLU(n_input_channels=channels, depth=depth, height=height, width=width,
                                 n_features=n_features, num_classes=num_classes, filters=filters,
-                                kernel_sizes=kernel_sizes,
-                                strides=strides, pad_value=pad_value,
-                                n_down_blocks=n_down_blocks,
-                                lrelu_alpha=lrelu_alpha, dropout_p=dropout_p,
-                                pooling_conv_filters=pooling_conv_filters,
-                                perform_pooling=perform_pooling,
+                                kernel_sizes=kernel_sizes, strides=strides, pad_value=pad_value,
+                                n_down_blocks=n_down_blocks, lrelu_alpha=lrelu_alpha, dropout_p=dropout_p,
+                                pooling_conv_filters=pooling_conv_filters, perform_pooling=perform_pooling,
                                 linear_units=linear_units, use_bias=use_bias)
     elif model_name == 'resnet_original_relu':
         # https://github.com/Tencent/MedicalNet
         model = get_resnet_original_relu(model_depth=10, channels=channels, depth=depth, height=height, width=width,
-                                         n_features=n_features, resnet_shortcut=resnet_shortcut, num_classes=num_classes)
+                                         n_features=n_features, resnet_shortcut=resnet_shortcut,
+                                         num_classes=num_classes)
     elif model_name == 'resnext_lrelu':
         model = get_resnext_lrelu(model_depth=10, channels=channels, n_features=n_features, filters=filters,
                                   num_group=filters, num_classes=num_classes, lrelu_alpha=lrelu_alpha)
     elif model_name == 'resnext_original_relu':
         # https://github.com/miraclewkf/ResNeXt-PyTorch/blob/master/resnext.py
-        model = get_resnext_original_relu(model_depth=10, channels=channels, n_features=n_features, num_classes=num_classes,
+        model = get_resnext_original_relu(model_depth=10, channels=channels, n_features=n_features,
+                                          num_classes=num_classes, dropout_p=dropout_p, linear_units=linear_units,
                                           clinical_variables_position=clinical_variables_position,
                                           clinical_variables_linear_units=clinical_variables_linear_units,
-                                          clinical_variables_dropout_p=clinical_variables_dropout_p, use_bias=use_bias, dropout_p=dropout_p, linear_units=linear_units)
+                                          clinical_variables_dropout_p=clinical_variables_dropout_p, use_bias=use_bias)
 
     else:
         raise ValueError('Invalid model_name: {}.'.format(model_name))
 
     # Load pretrained model weights
     if pretrained_path is not None:
-        #checkpoint = torch.load(pretrained_path)
-        checkpoint = torch.load(pretrained_path, map_location=torch.device('cpu'))
-        
-
-
+        checkpoint = torch.load(pretrained_path, map_location=torch.device('cpu')) ### DANIEL
 
         if model_name == 'resnet_original':
             # The pretrained model assumes 1 input channel, i.e. input_shape = (B, 1, D, H, W). However
@@ -530,28 +504,10 @@ def get_model(model_name, num_ohe_classes, channels, depth, height, width, n_fea
                 raise ValueError('Check of equality failed.')
                 assert False
         else:
-            ##### NEW
-            print("MODEL'S STATE_DICT:")
-            for param_tensor in model.state_dict():
-                print("  ", param_tensor, "\t", model.state_dict()[param_tensor].size())
-            print("\nCHECKPOINT CONTENTS:")
-            for thing in checkpoint:
-                print("  ", thing, "\t", checkpoint[thing].size())
-            
-            
-
-
-            ##### OLD
-            #model.load_state_dict(checkpoint['model_state_dict'])
             try:
-                model.load_state_dict(checkpoint['model_state_dict'])#, strict=False)
-                print("TRY WORKS")
-            except Exception as error:
-                #print("An error occurred:", error)
-                print("EXCEPTION")
-                checkpoint["out_layer.fc.weight"] = checkpoint["out_layer.weight"]
-                checkpoint["out_layer.fc.bias"] = checkpoint["out_layer.bias"]
-                model.load_state_dict(checkpoint)   ### DAN
+                model.load_state_dict(checkpoint['model_state_dict'])
+            except:
+                model.load_state_dict(checkpoint)
 
     return model
 
@@ -618,7 +574,6 @@ def get_optimizer(optimizer_name, model, lr, momentum, weight_decay, hessian_pow
     elif optimizer_name == 'ada_hessian':
         optimizer = optimizers.Adahessian(model.parameters(), lr=lr, weight_decay=weight_decay,
                                           hessian_power=hessian_power)
-
     elif optimizer_name == 'acc_sgd':
         optimizer = optimizers.AccSGD(model.parameters(), lr=lr, weight_decay=weight_decay)
     elif optimizer_name == 'ada_belief':
@@ -630,8 +585,8 @@ def get_optimizer(optimizer_name, model, lr, momentum, weight_decay, hessian_pow
     elif optimizer_name == 'ada_mod':
         optimizer = optimizers.AdaMod(model.parameters(), lr=lr, weight_decay=weight_decay)
     elif optimizer_name == 'apollo':
-        # TODO: add warmup to config
-        optimizer = optimizers.Apollo(model.parameters(), lr=lr, init_lr=lr / 100, warmup=500, weight_decay=weight_decay)
+        optimizer = optimizers.Apollo(model.parameters(), lr=lr, init_lr=lr / 100, warmup=500,
+                                      weight_decay=weight_decay)
     elif optimizer_name == 'diff_grad':
         optimizer = optimizers.DiffGrad(model.parameters(), lr=lr, weight_decay=weight_decay)
     elif optimizer_name == 'madgrad':
@@ -641,7 +596,6 @@ def get_optimizer(optimizer_name, model, lr, momentum, weight_decay, hessian_pow
     elif optimizer_name == 'pid':
         optimizer = optimizers.PID(model.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
     elif optimizer_name == 'qh_adam':
-        # TODO: add nus and betas (also used by Adam btw) to config
         optimizer = optimizers.QHAdam(model.parameters(), lr=lr, nus=(0.7, 1.0), betas=(0.995, 0.999),
                                       weight_decay=weight_decay)
     elif optimizer_name == 'qhm':
@@ -657,7 +611,6 @@ def get_optimizer(optimizer_name, model, lr, momentum, weight_decay, hessian_pow
         optimizer = optimizers.SWATS(model.parameters(), lr=lr, weight_decay=weight_decay)
     elif optimizer_name == 'yogi':
         optimizer = optimizers.Yogi(model.parameters(), lr=lr, weight_decay=weight_decay)
-
     else:
         raise ValueError('Invalid optimizer_name: {}.'.format(optimizer_name))
 
@@ -811,7 +764,7 @@ def learning_rate_finder(model, train_dataloader, val_dataloader, optimizer, opt
                                    criterion=loss_function, data_aug_p=data_aug_p, data_aug_strength=data_aug_strength,
                                    perform_augmix=perform_augmix, mixture_width=mixture_width,
                                    mixture_depth=mixture_depth, augmix_strength=augmix_strength,
-                                   mean=mean, std=std,
+                                   #mean=mean, std=std,
                                    grad_max_norm=grad_max_norm, device=device, logger=logger)
 
     # Run test
@@ -848,6 +801,7 @@ class LearningRateWarmUp(object):
     Note: for LearningRateWarmUp we need scheduler.step() to be applied after every batch in main.py, otherwise
         the warmup will not be effective.
     """
+
     def __init__(self, optimizer, warmup_batches, num_batches_per_epoch, target_lr, after_scheduler=None):
         self.optimizer = optimizer
         self.warmup_batches = warmup_batches
@@ -946,10 +900,12 @@ def save_predictions(patient_ids, y_pred_list, y_true_list, mode_list, num_class
 
     """
     # Print outputs
+    """
     logger.my_print('Model_name: {}.'.format(model_name))
     logger.my_print('patient_ids: {}.'.format(patient_ids))
     logger.my_print('y_pred_list: {}.'.format(y_pred_list))
     logger.my_print('y_true_list: {}.'.format(y_true_list))
+    """
 
     # Convert to CPU
     y_pred = [x.cpu().numpy() for x in y_pred_list]
@@ -993,4 +949,63 @@ def stratified_sampling_split(df, groups, frac, seed):
     return df_sample, df_other
 
 
+def weights_init(m, weight_init_name, kaiming_a, kaiming_mode, kaiming_nonlinearity, gain, logger):
+    """
+    Custom weights initialization.
 
+    The weights_init function takes an initialized model as input and re-initializes all convolutional,
+    batch normalization and instance normalization layers.
+
+    Source: https://pytorch.org/docs/stable/nn.init.html
+    Source: https://stackoverflow.com/questions/49433936/how-to-initialize-weights-in-pytorch
+    Source: https://github.com/pytorch/pytorch/blob/029a968212b018192cb6fc64075e68db9985c86a/torch/nn/modules/conv.py#L49
+    Source: https://github.com/pytorch/pytorch/blob/029a968212b018192cb6fc64075e68db9985c86a/torch/nn/modules/linear.py#L83
+    Source: https://github.com/pytorch/pytorch/blob/029a968212b018192cb6fc64075e68db9985c86a/torch/nn/modules/batchnorm.py#L51
+    Source: https://discuss.pytorch.org/t/initialization-and-batch-normalization/30655/2
+
+    Args:
+        m:
+        weight_init_name:
+        kaiming_a:
+        kaiming_mode:
+        kaiming_nonlinearity:
+        gain:
+        logger:
+
+    Returns:
+
+    """
+    # Initialize variables
+    classname = m.__class__.__name__
+
+    # Initialize output layer, for which a sigmoid-function will be preceded.
+    if 'Output' in classname:
+        torch.nn.init.xavier_uniform_(m.weight, gain=gain)
+        if m.bias is not None:
+            fan_in, _ = torch.nn.init._calculate_fan_in_and_fan_out(m.weight)
+            bound = 1 / math.sqrt(fan_in)  # if fan_in > 0 else 0
+            torch.nn.init.uniform_(m.bias, -bound, bound)
+        logger.my_print('Weights init of output layer: Xavier uniform.')
+
+    elif ('Conv' in classname) or ('Linear' in classname):
+        if weight_init_name == 'kaiming_uniform':
+            torch.nn.init.kaiming_uniform_(m.weight, a=kaiming_a, mode=kaiming_mode, nonlinearity=kaiming_nonlinearity)
+        elif weight_init_name == 'uniform':
+            torch.nn.init.uniform_(m.weight)
+        elif weight_init_name == 'xavier_uniform':
+            torch.nn.init.xavier_uniform_(m.weight, gain=gain)
+        elif weight_init_name == 'kaiming_normal':
+            torch.nn.init.kaiming_normal_(m.weight, a=kaiming_a, mode=kaiming_mode, nonlinearity=kaiming_nonlinearity)
+        elif weight_init_name == 'normal':
+            torch.nn.init.normal_(m.weight)
+        elif weight_init_name == 'xavier_normal':
+            torch.nn.init.xavier_normal_(m.weight, gain=gain)
+        elif weight_init_name == 'orthogonal':
+            torch.nn.init.orthogonal_(m.weight, gain=gain)
+        else:
+            raise ValueError('Invalid weight_init_name: {}.'.format(weight_init_name))
+
+        if m.bias is not None:
+            fan_in, _ = torch.nn.init._calculate_fan_in_and_fan_out(m.weight)
+            bound = 1 / math.sqrt(fan_in)  # if fan_in > 0 else 0
+            torch.nn.init.uniform_(m.bias, -bound, bound)

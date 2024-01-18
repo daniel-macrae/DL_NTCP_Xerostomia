@@ -8,6 +8,7 @@ exp*
 experiments/
 experiments_original/
 experiments*
+results/
 filled_holes/
 unfilled_holes/
 MedicalNet*

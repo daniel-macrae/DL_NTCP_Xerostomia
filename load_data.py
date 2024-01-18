@@ -69,6 +69,8 @@ def perform_stratified_sampling(df, frac, strata_groups, split_col, output_path_
     df_test = df[df[split_col] == 'test']
     df_train, df_val = stratified_sampling_split(df=df_train_val, groups=strata_groups, frac=frac, seed=seed)
 
+    print(len(df))
+    print(len(df_train.index.tolist()), len(df_val.index.tolist()), len(df_test.index.tolist()))
     assert len(df) == len(df_train.index.tolist() + df_val.index.tolist() + df_test.index.tolist())
     assert len(df) == len(set(df_train.index.tolist() + df_val.index.tolist() + df_test.index.tolist()))
 
@@ -239,6 +241,7 @@ def get_files(sampling_type, features, filename_stratified_sampling_test_csv, fi
         for d_dict in data_dicts:
             patient_id = d_dict['patient_id']
             df_split_i = df_split[df_split[patient_id_col] == patient_id]
+            print(len(df_split_i))
             assert len(df_split_i) == 1
             split_i = df_split_i['Split'].values[0]
             if split_i == 'train':
