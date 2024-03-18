@@ -319,6 +319,7 @@ def train(model, train_dataloader, val_dataloader, test_dataloader, mean, std, o
             train_y_pred_list = misc.proba(sigmoid_act(train_y_pred))
         else:
             train_y_pred_list = [softmax_act(i) for i in train_y_pred]
+        
         train_y_list = [to_onehot(i) for i in train_y]
         train_auc_value = misc.compute_auc(y_pred_list=train_y_pred_list, y_true_list=train_y_list,
                                            auc_metric=auc_metric)
@@ -597,6 +598,9 @@ if __name__ == '__main__':
     random.seed(a=seed)
     np.random.seed(seed=seed)
     torch.backends.cudnn.benchmark = cudnn_benchmark
+
+    if not cudnn_benchmark:
+        torch.backends.cudnn.deterministic = True
 
     # Initialize data objects
     train_auc_list, train_auc_lr_list = list(), list()
