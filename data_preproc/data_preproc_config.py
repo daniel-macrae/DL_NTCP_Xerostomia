@@ -185,7 +185,7 @@ ext_features = ['CT+C_available', 'CT_Artefact', 'Photons', 'Split']
 """
 
 ## NOTE: XEROSTOMIA
-"""
+
 # data_preproc.py: filename_endpoints_csv
 patient_id_col = 'PatientID'
 endpoint = 'HN35_Xerostomia_M12_class'
@@ -221,7 +221,7 @@ features = ['Parotid_meandose', 'OralCavity_Ext_meandose', 'LEEFTIJD']  # Featur
 lr_coefficients = None  # [-2.9032, 0.0193, 0.1054, 0.5234, 1.2763]  # Values starting with coefficient for `intercept`,
 # followed by coefficients of `features` (in the same order). If None, then no predefined coefficients will be used.
 ext_features = ['Artefact', 'LEEFTIJD']
-
+"""
 
 # (Stratified Sampling)
 # data_preproc.py, check_data_preproc_ct_segmentation_map.py: relevant segmentation structures

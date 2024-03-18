@@ -29,7 +29,7 @@ import data_preproc.data_preproc_config as data_preproc_config
 from data_preproc.data_preproc_functions import create_folder_if_not_exists
 
 # Whether to perform quick run for checking workability of code or not
-perform_test_run = True
+perform_test_run = False
 
 # Set directory contexts
 root_path = os.getcwd()
@@ -38,7 +38,7 @@ optimizers_dir = os.path.join(root_path, 'optimizers')
 data_preproc_dir = os.path.join(root_path, 'data_preproc')
 save_root_dir = os.path.join(root_path, 'datasets')
 data_dir = os.path.join(save_root_dir, 'hendrike_taste')  # Change this one to the data directory!
-exp_root_dir = os.path.join(root_path, 'experiments', 'taste_test')   # Change this one so that each experiment is put in its own folder!
+exp_root_dir = os.path.join(root_path, 'experiments', 'taste_reproduce_2')   # Change this one so that each experiment is put in its own folder!
 create_folder_if_not_exists(exp_root_dir)
 exp_name = datetime.now().strftime("%Y%m%d_%H%M%S")
 exp_dir = os.path.join(exp_root_dir, exp_name)
@@ -81,7 +81,7 @@ strata_groups = ['CT+C_available', 'CT_Artefact', 'Photons']  #, 'Year_treatment
 strata_groups = ['Artefact', 'Taste_M06'] # NOTE: TASTE
 split_col = 'Split'  # (Stratified Sampling). Column of the stratified sampling outcome ('train', 'val', 'test').
 cv_strata_groups = strata_groups  # (TODO: implement) Stratified Cross-Validation groups
-cv_folds = 3  # (Cross-Validation) If cv_folds=1, then perform train-val-test-split.
+cv_folds = 5  # (Cross-Validation) If cv_folds=1, then perform train-val-test-split.
 cv_type = 'stratified'  # (Stratified CV, only if cv_folds > 1) None | 'stratified'. Stratification is performed on endpoint value.
 dataset_type = 'cache'  # 'standard' | 'cache' | 'persistent'. If None, then 'standard'.
 # Cache: caches data in RAM storage. Persistent: caches data in disk storage instead of RAM storage.
@@ -145,8 +145,8 @@ segmentation_map_clip = True
 # D_contra_0
 # d_contra_0_max = 62
 # Data augmentation config (only if perform_data_aug=True)
-data_aug_p = 0.29934222796712345  # Probability of a data augmentation transform: data_aug_p=0 is no data aug.
-data_aug_strength = 0.5733635494864809  # Strength of data augmentation: strength=0 is no data aug (except flipping).
+data_aug_p = 0.117577145  # Probability of a data augmentation transform: data_aug_p=0 is no data aug.
+data_aug_strength = 0.209136162  # Strength of data augmentation: strength=0 is no data aug (except flipping).
 # Interpolation modes: 'trilinear'/'bilinear' | 'nearest'.
 ct_interpol_mode_3d = 'trilinear'  # OLD 'bilinear'
 rtdose_interpol_mode_3d = 'trilinear'  # OLD 'bilinear'
@@ -160,7 +160,7 @@ ct_dose_seg_interpol_mode_2d = 'bilinear'
 perform_augmix = False
 mixture_width = 3  # 3 (default)
 mixture_depth = [1, 3]  # [1, 3] (default)
-augmix_strength = 3
+augmix_strength = 0.2885
 
 # Deep Learning model config
 model_name = 'resnet_dcnn_lrelu'  # ['cnn_lrelu', 'convnext_tiny', 'convnext_small', 'convnext_base',
@@ -180,6 +180,7 @@ features_dl = ['Xero_BSL_severe', 'Xero_BSL_moderate', 'Xero_BSL_Little', 'Xero_
                'ROKEN', 'P16_niet_bepaald', 'P16_positief', 'P16_negatief', 'WHO_0', 'WHO_1', 'WHO_2', 'WHO_3', 'WHO_4']  # [] | data_preproc_config.features  # Should contain columns in features.csv.
 # TASTE
 features_dl = ['LEEFTIJD']
+
 resnet_shortcut = 'B'  # (resnet_original) 'A', 'B'. Pretrained resnet10_original has 'B', resnet18_original has 'A'.
 filters = [16, 16, 32, 64]
 kernel_sizes = [[1,5,5], [1,4,4], [1,3,3], [1,3,3]]
@@ -218,8 +219,8 @@ optimizer_name = 'ada_belief'  # ['acc_sgd', 'ada_belief', 'ada_bound', 'ada_bou
 # 'adam_w', 'apollo', 'diff_grad', 'madgrad', 'novo_grad', 'qh_adam', 'qhm', 'r_adam', 'ranger_21', 'ranger_qh',
 # 'rmsprop', 'pid', 'sgd', 'sgd_w', 'swats', 'yogi']
 optimizer_name_next = []  # [] | ['sgd']. Next optimizers after nr_epochs_not_improved_opt >= patience_lr.
-momentum = 0.85  # 0 (default), 0.85, 0.9 (common), 0.95. For optimizer_name in ['rmsprop', 'sgd', 'sgd_w'].
-weight_decay = 0  # 0 (default), 0.01 (for optimizer_name in ['adam_w', 'sgd_w']). L2 regularization penalty.
+momentum = 0.203691348  # 0 (default), 0.85, 0.9 (common), 0.95. For optimizer_name in ['rmsprop', 'sgd', 'sgd_w'].
+weight_decay = 0.031546424  # 0 (default), 0.01 (for optimizer_name in ['adam_w', 'sgd_w']). L2 regularization penalty.
 hessian_power = 1.0  # (AdaHessian)
 use_lookahead = False  # (Lookahead)
 lookahead_k = 5  # (Lookahead) 5 (default), 10.
@@ -232,12 +233,12 @@ loss_weights = [0.8155014092378807, 0.245137601641366, 0.311772661471349, 0.7345
 label_weights = [1, 1]  # [1, 1] (ce) | [1] (bce) | w_jj = (1 - /beta) / (1 - /beta^{n_samples_j}) (\beta = 0.9, 0.99) |
 # wj=n_samples / (n_classes * n_samplesj). Rescaling (relative) weight given to each class, has to be list of size C.
 loss_reduction = 'mean'
-label_smoothing = 0.03636903850185344  # (LabelSmoothing) If 0, then no label smoothing will be applied. Currently only supported for
+label_smoothing = 0.036369039  # (LabelSmoothing) If 0, then no label smoothing will be applied. Currently only supported for
 # loss_function_name='cross_entropy'.
 scheduler_name = None # 'cyclic'  # [None, 'cosine', 'cyclic', 'exponential', 'step', 'lr_finder', 'reduce_lr', 'batch_size',
 # 'manual_lr']. If None, then no scheduler will be applied.
 grad_max_norm = None  # (GradientClipping) Maximum norm of gradients. If None, then no grad clipping will be applied.
-lr = 1e-4  # 0.0004750810162102798  # Redundant if perform_lr_finder=True.
+lr = 0.000589  # 0.0004750810162102798  # Redundant if perform_lr_finder=True.
 lr_finder_lower_lr = 1e-6  # (LearningRateFinder) Maximum learning rate value to try.
 lr_finder_upper_lr = 1e-3  # (LearningRateFinder) Minimum learning rate value to try.
 lr_finder_num_iter = 0  # (LearningRateFinder) Number of learning rates to try within [lower_lr, upper_lr].
