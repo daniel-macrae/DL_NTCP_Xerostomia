@@ -784,7 +784,7 @@ if __name__ == '__main__':
         # If lr = None (i.e. lr cannot be found), then skip iteration of the for-loop
         if lr is None:
             # continue
-            max_epochs = 0
+            max_epochs = 0 # TODO: revise this?
         else:
             max_epochs = config.max_epochs
 
@@ -945,6 +945,7 @@ if __name__ == '__main__':
         misc.save_predictions(patient_ids=all_patient_ids_lr, y_pred_list=all_y_pred_lr_list, y_true_list=all_y_lr_list,
                               mode_list=all_modes_lr, num_classes=num_classes, model_name='lr_all', exp_dir=exp_dir,
                               logger=logger)
+
 
         if max_epochs > 0:
             # Create results.csv
