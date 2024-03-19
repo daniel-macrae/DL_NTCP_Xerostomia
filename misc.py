@@ -512,7 +512,9 @@ def get_model(model_name, num_ohe_classes, channels, depth, height, width, n_fea
     return model
 
 
-def get_model_summary(model, input_size, device, logger):
+#def get_model_summary(model, input_size, device, logger):
+
+def get_model_summary(config, model, input_size, device, logger, save_to_file = True):
     """
     Get model summary and number of trainable parameters.
 
@@ -523,13 +525,17 @@ def get_model_summary(model, input_size, device, logger):
         logger:
 
     Returns:
+        total_params (int): number of trainable parameters
 
     """
     # Get and save summary
-    txt = str(summary(model=model, input_size=input_size, device=device))
-    file = open(os.path.join(config.exp_dir, config.filename_model_txt), 'a+', encoding='utf-8')
-    file.write(txt)
-    file.close()
+    verbose = 1
+    txt = str(summary(model=model, input_size=input_size, device=device, verbose=verbose, depth=5,
+                      col_names=["input_size","output_size","num_params", "kernel_size"], row_settings=["var_names"]))
+    if save_to_file:
+        file = open(os.path.join(config.exp_dir, config.filename_model_txt), 'a+', encoding='utf-8')
+        file.write(txt)
+        file.close()
 
     # Determine number of trainable parameters
     # Source: https://stackoverflow.com/questions/49201236/check-the-total-number-of-parameters-in-a-pytorch-model

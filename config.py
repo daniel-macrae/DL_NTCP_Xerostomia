@@ -38,7 +38,7 @@ optimizers_dir = os.path.join(root_path, 'optimizers')
 data_preproc_dir = os.path.join(root_path, 'data_preproc')
 save_root_dir = os.path.join(root_path, 'datasets')
 data_dir = os.path.join(save_root_dir, 'daniel_xerostomia')  # Change this one to the data directory!
-exp_root_dir = os.path.join(root_path, 'experiments', 'Xerostomia_BCE_no_clinical_features_2')   # Change this one so that each experiment is put in its own folder!
+exp_root_dir = os.path.join(root_path, 'experiments', 'Xerostomia_BCE_clinical_features_2')   # Change this one so that each experiment is put in its own folder!
 create_folder_if_not_exists(exp_root_dir)
 exp_name = datetime.now().strftime("%Y%m%d_%H%M%S")
 exp_dir = os.path.join(exp_root_dir, exp_name)
@@ -168,7 +168,7 @@ model_name = 'dcnn_lrelu'  # ['cnn_lrelu', 'convnext_tiny', 'convnext_small', 'c
 # 'resnet_dcnn_selu', 'resnet_mp_lrelu', 'resnet_original_relu', 'resnext_lrelu', 'resnext_original_relu'].
 n_input_channels = 3  # CT, RTDOSE and Segmentation_map
 # XEROSTOMIA
-features_dl = [] # ['HN35_Xerostomia_W01_not_at_all', 'HN35_Xerostomia_W01_little', 'HN35_Xerostomia_W01_moderate_to_severe', 'Sex', 'Age']
+features_dl = ['HN35_Xerostomia_W01_not_at_all', 'HN35_Xerostomia_W01_little', 'HN35_Xerostomia_W01_moderate_to_severe', 'Sex', 'Age']
                 # [] | data_preproc_config.features  # Should contain columns in features.csv.
 
 resnet_shortcut = 'B'  # (resnet_original) 'A', 'B'. Pretrained resnet10_original has 'B', resnet18_original has 'A'.
@@ -257,7 +257,7 @@ max_epochs = 100
 batch_size = 8
 max_batch_size = 16
 eval_interval = 1
-patience = 20  # (EarlyStopping): stop training after this number of consecutive epochs without
+patience = 10  # (EarlyStopping): stop training after this number of consecutive epochs without
 # internal validation improvements.
 
 # Plotting config

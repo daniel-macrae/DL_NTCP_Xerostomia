@@ -746,7 +746,7 @@ if __name__ == '__main__':
         # we just use `1` in the input of summary().
         # Important note: torchinfo.summary() somehow uses some random() on input_size, because it will create
         # random input. I.e. input_size changes the next random values.
-        total_params = misc.get_model_summary(model=model, input_size=[(batch_size, channels, depth, height, width),
+        total_params = misc.get_model_summary(config=config, model=model, input_size=[(batch_size, channels, depth, height, width),
                                                                        (batch_size, max(n_features, 1))], device=device,
                                               logger=logger)
 

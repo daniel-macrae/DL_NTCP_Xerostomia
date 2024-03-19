@@ -65,6 +65,7 @@ class depthwise_separable_conv(torch.nn.Module):
         out = self.pointwise(out)
         return out
 
+# NOTE: DANIEL: changed Output class (old version below)
 
 class Output(torch.nn.Linear):
     def __init__(self, in_features, out_features, bias=True):
