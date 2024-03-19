@@ -833,12 +833,17 @@ if __name__ == '__main__':
 
             train_auc_list.append(train_auc_value)
             val_auc_list.append(val_auc_value)
+            logger.my_print("  FINAL RESULTS:  ")
+            logger.my_print("  Training AUC: {:.3f}".format(train_auc_value))
+            logger.my_print("  Validation AUC: {:.3f}".format(val_auc_value))
 
             # Test evaluate model
             if test_dl is not None:
                 test_loss_value, test_mse_value, test_auc_value, test_patient_ids, test_y_pred_list, test_y_list = \
                     validate(model=model, dataloader=test_dl, mean=norm_mean_dict[fold], std=norm_std_dict[fold],
                              mode='test', logger=logger, save_outputs=True)
+                
+                logger.my_print("  Test AUC: {:.3f}".format(test_auc_value))
 
                 # Store predictions on test set
                 all_patient_ids += test_patient_ids
