@@ -704,7 +704,7 @@ if __name__ == '__main__':
                                num_classes=num_classes, filters=filters, kernel_sizes=kernel_sizes, strides=strides,
                                pad_value=pad_value,
                                lrelu_alpha=lrelu_alpha, dropout_p=dropout_p, pooling_conv_filters=pooling_conv_filters,
-                               perform_pooling=perform_pooling, linear_units=linear_units,
+                               perform_pooling=perform_pooling, pooling=config.pooling, linear_units=linear_units,
                                clinical_variables_position=clinical_variables_position,
                                clinical_variables_linear_units=clinical_variables_linear_units,
                                clinical_variables_dropout_p=clinical_variables_dropout_p,

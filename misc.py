@@ -35,6 +35,8 @@ from models.resnet_dcnn_lrelu_gn import ResNet_DCNN_LReLU_GN
 from models.resnet_dcnn_selu import ResNet_DCNN_SELU
 from models.resnet_mp_lrelu import ResNet_MP_LReLU
 
+from models.dcnn_pooling import DCNN_Pooling
+
 
 def proba(pred):
     """
@@ -316,7 +318,7 @@ def get_loss_function(loss_function_name, label_weights, label_smoothing, loss_w
 
 def get_model(model_name, num_ohe_classes, channels, depth, height, width, n_features, resnet_shortcut, num_classes,
               filters, kernel_sizes, strides, pad_value, lrelu_alpha, dropout_p, pooling_conv_filters,
-              perform_pooling, linear_units, clinical_variables_position, clinical_variables_linear_units,
+              perform_pooling, pooling, linear_units, clinical_variables_position, clinical_variables_linear_units,
               clinical_variables_dropout_p, use_bias, pretrained_path, logger):
     """
     Initialize model.
@@ -350,6 +352,17 @@ def get_model(model_name, num_ohe_classes, channels, depth, height, width, n_fea
                            clinical_variables_position=clinical_variables_position,
                            clinical_variables_linear_units=clinical_variables_linear_units,
                            clinical_variables_dropout_p=clinical_variables_dropout_p, use_bias=use_bias)
+
+    elif model_name == "dcnn_pooling":
+        model = DCNN_Pooling(n_input_channels=channels, depth=depth, height=height, width=width, n_features=n_features,
+                             num_classes=num_classes, filters=filters, kernel_sizes=kernel_sizes, strides=strides,
+                             pad_value=pad_value, n_down_blocks=n_down_blocks, lrelu_alpha=lrelu_alpha,
+                             dropout_p=dropout_p, pooling_conv_filters=pooling_conv_filters,
+                             perform_pooling=perform_pooling, pooling=pooling, linear_units=linear_units,
+                             clinical_variables_position=clinical_variables_position,
+                             clinical_variables_linear_units=clinical_variables_linear_units,
+                             clinical_variables_dropout_p=clinical_variables_dropout_p, use_bias=use_bias)    
+    
     elif model_name == 'dcnn_dws_lrelu':
         model = DCNN_DWS_LReLU(n_input_channels=channels, depth=depth, height=height, width=width,
                                n_features=n_features, num_classes=num_classes, filters=filters,

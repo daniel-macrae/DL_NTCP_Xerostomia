@@ -38,7 +38,7 @@ optimizers_dir = os.path.join(root_path, 'optimizers')
 data_preproc_dir = os.path.join(root_path, 'data_preproc')
 save_root_dir = os.path.join(root_path, 'datasets')
 data_dir = os.path.join(save_root_dir, 'daniel_xerostomia')  # Change this one to the data directory!
-exp_root_dir = os.path.join(root_path, 'experiments', 'Xerostomia_BCE_clinical_features_2')   # Change this one so that each experiment is put in its own folder!
+exp_root_dir = os.path.join(root_path, 'experiments', 'Xero_with_average_pooling')   # Change this one so that each experiment is put in its own folder!
 create_folder_if_not_exists(exp_root_dir)
 exp_name = datetime.now().strftime("%Y%m%d_%H%M%S")
 exp_dir = os.path.join(exp_root_dir, exp_name)
@@ -159,7 +159,7 @@ mixture_depth = [1, 3]  # [1, 3] (default)
 augmix_strength = 3
 
 # Deep Learning model config
-model_name = 'dcnn_lrelu'  # ['cnn_lrelu', 'convnext_tiny', 'convnext_small', 'convnext_base',
+model_name = 'dcnn_pooling'  # ['cnn_lrelu', 'convnext_tiny', 'convnext_small', 'convnext_base',
 # 'dcnn_lrelu', 'dcnn_dws_lrelu', 'dcnn_lrelu_gn', 'dcnn_lrelu_ln', 'dcnn_selu', 'efficientnet-b0', 'efficientnet-b1',
 # ..., 'efficientnet-b8', 'efficientnetv2_xs', 'efficientnetv2_s', 'efficientnetv2_m', 'efficientnetv2_l',
 # 'efficientnetv2_xl', 'efficientnetv2_s_selu', 'efficientnetv2_m_selu', 'efficientnetv2_l_selu',
@@ -174,13 +174,14 @@ features_dl = ['HN35_Xerostomia_W01_not_at_all', 'HN35_Xerostomia_W01_little', '
 resnet_shortcut = 'B'  # (resnet_original) 'A', 'B'. Pretrained resnet10_original has 'B', resnet18_original has 'A'.
 filters = [8, 8, 16, 16, 32]
 kernel_sizes = [7, 5, 4, 3, 3]
-strides = [[2]*3, [2]*3, [2]*3, [2]*3, [2]*3]  # strides>2 currently not supported.
+strides = [[1]*3, [1]*3, [1]*3, [1]*3, [1]*3]  # strides>2 currently not supported.
 # Usually len(kernel_sizes) == len(filters), but len(kernel_sizes) > len(filters) is often allowed, but then
 # kernel_sizes[:len(filters)] will be used. Similarly for strides.
 pad_value = 0  # (Padding) Value used for padding.
 lrelu_alpha = 0.1  # (LeakyReLU) Negative slope.
 pooling_conv_filters = None  # Either int or None (i.e. no pooling conv before flattening).
 perform_pooling = False  # Whether to perform (Avg)Pooling or not. If pooling_conv_filters is not None, then
+pooling = 'avg'
 # (Avg)Pooling will not be applied.
 linear_units = [16]
 dropout_p = [0]  # Should have the same length as `linear_units`
