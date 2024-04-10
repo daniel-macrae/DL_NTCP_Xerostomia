@@ -267,12 +267,16 @@ def train(model, train_dataloader, val_dataloader, test_dataloader, mean, std, o
             # Calculate loss
             try:
                 # Cross-Entropy, Ranking, Custom
+                print(train_outputs, train_labels)
+                print(train_outputs.shape, train_labels.shape)
+                
                 train_loss = loss_function(train_outputs, train_labels)
             except:
                 # BCE
                 train_loss = loss_function(train_outputs,
                                            torch.reshape(train_labels, train_outputs.shape).to(train_outputs.dtype))
             
+            """
             if optimizer_name in ['ada_hessian']:
                 # https://github.com/pytorch/pytorch/issues/4661
                 # https://discuss.pytorch.org/t/how-to-backward-the-derivative/17662?u=bpetruzzo
@@ -284,6 +288,7 @@ def train(model, train_dataloader, val_dataloader, test_dataloader, mean, std, o
                 # torch.autograd.grad(train_loss, model.parameters(), create_graph=True)
             else:
                 train_loss.backward()
+            """
 
             # Perform gradient clipping
             # https://stackoverflow.com/questions/54716377/how-to-do-gradient-clipping-in-pytorch

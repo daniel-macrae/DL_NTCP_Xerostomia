@@ -38,7 +38,7 @@ optimizers_dir = os.path.join(root_path, 'optimizers')
 data_preproc_dir = os.path.join(root_path, 'data_preproc')
 save_root_dir = os.path.join(root_path, 'datasets')
 data_dir = os.path.join(save_root_dir, 'daniel_xerostomia')  # Change this one to the data directory!
-exp_root_dir = os.path.join(root_path, 'experiments', 'Xero_with_average_pooling')   # Change this one so that each experiment is put in its own folder!
+exp_root_dir = os.path.join(root_path, 'experiments', 'Test Hung DCNN')   # Change this one so that each experiment is put in its own folder!
 create_folder_if_not_exists(exp_root_dir)
 exp_name = datetime.now().strftime("%Y%m%d_%H%M%S")
 exp_dir = os.path.join(exp_root_dir, exp_name)
@@ -61,7 +61,7 @@ filename_results_png = 'results.png'
 # Basic config
 wandb_mode = 'disabled'  # 'online' | 'offline' | 'disabled'
 torch_version = torch.__version__
-seed = 123
+seed = 4
 nr_of_decimals = 3
 
 # Decide which device we want to run on
@@ -80,7 +80,7 @@ perform_stratified_sampling_full = True  # (Stratified Sampling). Whether or not
 strata_groups = ['CT+C_available', 'CT_Artefact', 'Photons', 'Loctum2_v2']  #, 'Year_treatment_2cat']  # (Stratified Sampling). Note: order does not matter.
 split_col = 'Split'  # (Stratified Sampling). Column of the stratified sampling outcome ('train', 'val', 'test').
 cv_strata_groups = strata_groups  # (TODO: implement) Stratified Cross-Validation groups
-cv_folds = 5  # (Cross-Validation) If cv_folds=1, then perform train-val-test-split.
+cv_folds = 10  # (Cross-Validation) If cv_folds=1, then perform train-val-test-split.
 cv_type = 'stratified'  # (Stratified CV, only if cv_folds > 1) None | 'stratified'. Stratification is performed on endpoint value.
 dataset_type = 'cache'  # 'standard' | 'cache' | 'persistent'. If None, then 'standard'.
 # Cache: caches data in RAM storage. Persistent: caches data in disk storage instead of RAM storage.
@@ -104,7 +104,7 @@ segmentation_structures = data_preproc_config.structures_uncompound_list
 # Data preprocessing config: load_data.py
 image_keys = ['ct', 'rtdose', 'segmentation_map']  # Do not change
 concat_key = 'ct_dose_seg'  # Do not change
-perform_data_aug = True
+perform_data_aug = False
 rand_cropping_size = [96, 96, 96]  # (REDUNDANT)  # OLD [100, 100, 100]  # (only for training data)
 input_size = [96, 96, 96]  # OLD [100, 100, 100]  # if rand_cropping_size==input_size, then no resizing will be applied
 
@@ -153,13 +153,13 @@ rtdose_interpol_mode_2d = 'bilinear'
 segmentation_interpol_mode_2d = 'nearest'  # OLD 'bilinear'
 ct_dose_seg_interpol_mode_2d = 'bilinear'
 # AugMix
-perform_augmix = True
+perform_augmix = False
 mixture_width = 3  # 3 (default)
 mixture_depth = [1, 3]  # [1, 3] (default)
 augmix_strength = 3
 
 # Deep Learning model config
-model_name = 'dcnn_pooling'  # ['cnn_lrelu', 'convnext_tiny', 'convnext_small', 'convnext_base',
+model_name = 'dcnn_lrelu' #  'dcnn_pooling'  # ['cnn_lrelu', 'convnext_tiny', 'convnext_small', 'convnext_base',
 # 'dcnn_lrelu', 'dcnn_dws_lrelu', 'dcnn_lrelu_gn', 'dcnn_lrelu_ln', 'dcnn_selu', 'efficientnet-b0', 'efficientnet-b1',
 # ..., 'efficientnet-b8', 'efficientnetv2_xs', 'efficientnetv2_s', 'efficientnetv2_m', 'efficientnetv2_l',
 # 'efficientnetv2_xl', 'efficientnetv2_s_selu', 'efficientnetv2_m_selu', 'efficientnetv2_l_selu',
@@ -174,14 +174,14 @@ features_dl = ['HN35_Xerostomia_W01_not_at_all', 'HN35_Xerostomia_W01_little', '
 resnet_shortcut = 'B'  # (resnet_original) 'A', 'B'. Pretrained resnet10_original has 'B', resnet18_original has 'A'.
 filters = [8, 8, 16, 16, 32]
 kernel_sizes = [7, 5, 4, 3, 3]
-strides = [[1]*3, [1]*3, [1]*3, [1]*3, [1]*3]  # strides>2 currently not supported.
+strides = [[2]*3, [2]*3, [2]*3, [2]*3, [2]*3]  # strides>2 currently not supported.
 # Usually len(kernel_sizes) == len(filters), but len(kernel_sizes) > len(filters) is often allowed, but then
 # kernel_sizes[:len(filters)] will be used. Similarly for strides.
 pad_value = 0  # (Padding) Value used for padding.
 lrelu_alpha = 0.1  # (LeakyReLU) Negative slope.
 pooling_conv_filters = None  # Either int or None (i.e. no pooling conv before flattening).
 perform_pooling = False  # Whether to perform (Avg)Pooling or not. If pooling_conv_filters is not None, then
-pooling = 'avg'
+pooling = None # 'avg'
 # (Avg)Pooling will not be applied.
 linear_units = [16]
 dropout_p = [0]  # Should have the same length as `linear_units`
@@ -192,11 +192,11 @@ clinical_variables_position = 0  # (Only if len(features_dl) > 0.) -1 | 0 | 1 | 
 clinical_variables_linear_units = []  # (Only if len(features_dl) > 0.) None | list of ints
 clinical_variables_dropout_p = []  # Should have the same length as `clinical_variables_linear_units`
 use_bias = True
-num_classes = 1  # Model outputs size. IMPORTANT: define `label_weights` such that len(label_weights) == num_classes.
+num_classes = 2  # Model outputs size. IMPORTANT: define `label_weights` such that len(label_weights) == num_classes.
 num_ohe_classes = 2  # Size of One-Hot Encoding output.
 
 # Optimization config
-pretrained_path = None  # None, path_to_and_including_pth (e.g. 'MedicalNet/pretrain/resnet_10_23dataset.pth')
+pretrained_path = "//zkh/appdata/RTDicom/Projectline_HNC_modelling/Users/Suzanne de Vette/20240410 Modellen Hung/dcnn_lrelu_v2" # None  # None, path_to_and_including_pth (e.g. 'MedicalNet/pretrain/resnet_10_23dataset.pth')
 weight_init_name = 'kaiming_uniform'  # [None, 'kaiming_uniform', 'uniform', 'xavier_uniform', 'kaiming_normal',
 # 'normal', 'xavier_normal', 'orthogonal']. If None, then PyTorch's default (i.e. 'kaiming_uniform', but with
 # a = math.sqrt(5)). Kaiming works well if the network has (Leaky) P(ReLU) activations.
@@ -216,12 +216,12 @@ hessian_power = 1.0  # (AdaHessian)
 use_lookahead = False  # (Lookahead)
 lookahead_k = 5  # (Lookahead) 5 (default), 10.
 lookahead_alpha = 0.5  # (Lookahead) 0.5 (default), 0.8.
-loss_function_name = 'bce'  # [None, 'bce' (num_classes = 1), 'cross_entropy' (num_classes = 2), 'cross_entropy',
+loss_function_name = 'cross_entropy'  # [None, 'bce' (num_classes = 1), 'cross_entropy' (num_classes = 2), 'cross_entropy',
 # 'dice', 'f1', 'ranking', 'soft_auc', 'custom']. Note: if 'bce', then also change label_weights to list of 1 element.
 # Note: model output should be logits, i.e. NO sigmoid() (BCE) nor softmax() (CE) applied.
 loss_weights = [1, 0, 0, 0, 0, 0]  # [1/6, 1/6, 1/6, 1/6, 1/6, 1/6].
 # (loss_function_name='custom') list of weight for [ce, dice, f1, l1, ranking, soft_auc].
-label_weights = [1]  # [1, 1] (ce) | [1] (bce) | w_jj = (1 - /beta) / (1 - /beta^{n_samples_j}) (\beta = 0.9, 0.99) |
+label_weights = [1, 1]  # [1, 1] (ce) | [1] (bce) | w_jj = (1 - /beta) / (1 - /beta^{n_samples_j}) (\beta = 0.9, 0.99) |
 # wj=n_samples / (n_classes * n_samplesj). Rescaling (relative) weight given to each class, has to be list of size C.
 loss_reduction = 'mean'
 label_smoothing = 0  # (LabelSmoothing) If 0, then no label smoothing will be applied. Currently only supported for
@@ -254,7 +254,7 @@ manual_lr = [1e-3, 1e-5, 1e-6]  # (Manual_LR) LR per epoch, if epoch > len(manua
 
 # Training config
 nr_runs = 1
-max_epochs = 100
+max_epochs = 1
 batch_size = 8
 max_batch_size = 16
 eval_interval = 1
@@ -275,7 +275,7 @@ if perform_test_run:
     val_frac = 0.33
     cv_folds = 3
     batch_size = 4
-    num_workers = 0
+    num_workers = 4
     pin_memory = False
     plot_interval = 1
     max_nr_images_per_interval = 5
