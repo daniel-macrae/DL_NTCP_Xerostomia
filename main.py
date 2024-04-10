@@ -266,10 +266,7 @@ def train(model, train_dataloader, val_dataloader, test_dataloader, mean, std, o
             
             # Calculate loss
             try:
-                # Cross-Entropy, Ranking, Custom
-                print(train_outputs, train_labels)
-                print(train_outputs.shape, train_labels.shape)
-                
+                # Cross-Entropy, Ranking, Custom                
                 train_loss = loss_function(train_outputs, train_labels)
             except:
                 # BCE
