@@ -10,6 +10,7 @@ import shutil
 import random
 import numpy as np
 import matplotlib
+import gc
 
 # import wandb
 
@@ -273,7 +274,6 @@ def train(model, train_dataloader, val_dataloader, test_dataloader, mean, std, o
                 train_loss = loss_function(train_outputs,
                                            torch.reshape(train_labels, train_outputs.shape).to(train_outputs.dtype))
             
-            """
             if optimizer_name in ['ada_hessian']:
                 # https://github.com/pytorch/pytorch/issues/4661
                 # https://discuss.pytorch.org/t/how-to-backward-the-derivative/17662?u=bpetruzzo
@@ -285,8 +285,7 @@ def train(model, train_dataloader, val_dataloader, test_dataloader, mean, std, o
                 # torch.autograd.grad(train_loss, model.parameters(), create_graph=True)
             else:
                 train_loss.backward()
-            """
-
+            
             # Perform gradient clipping
             # https://stackoverflow.com/questions/54716377/how-to-do-gradient-clipping-in-pytorch
             if grad_max_norm is not None:
@@ -312,6 +311,11 @@ def train(model, train_dataloader, val_dataloader, test_dataloader, mean, std, o
             train_loss_value += train_loss.item()
             train_y_pred = torch.cat([train_y_pred, train_outputs], dim=0)
             train_y = torch.cat([train_y, train_labels], dim=0)
+
+            del train_loss
+            gc.collect()  # collect garbage after each epoch
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache() 
 
         # Averaging training loss
         train_loss_value /= train_num_iterations
@@ -486,6 +490,11 @@ def train(model, train_dataloader, val_dataloader, test_dataloader, mean, std, o
                 logger.my_print('Next optimizer: {}.'.format(optimizer_name_i))
 
             nr_epochs_not_improved_opt = 0
+
+        del train_inputs, train_features, train_labels, train_outputs, train_y_pred, train_y
+        gc.collect()  # collect garbage after each epoch
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache() 
 
     return (
     train_loss_values_list, val_loss_values_list, test_loss_values_list, train_mse_values_list, val_mse_values_list,
@@ -867,6 +876,10 @@ if __name__ == '__main__':
 
         # Run logistic regression (LR) model (reference model)
         features_csv = os.path.join(config.data_dir, data_preproc_config.filename_features_csv)
+
+        #
+        features_csv = os.path.join(config.data_dir, config.filename_stratified_sampling_full_csv)
+
         patient_ids_json = os.path.join(exp_dir, config.filename_train_val_test_patient_ids_json.format(fold))
         (train_patient_ids_lr, train_y_pred_lr, train_y_lr, val_patient_ids_lr, val_y_pred_lr, val_y_lr,
          test_patient_ids_lr, test_y_pred_lr, test_y_lr, lr_coefficients) = \

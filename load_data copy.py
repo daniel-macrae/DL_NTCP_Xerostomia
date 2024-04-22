@@ -27,6 +27,7 @@ from monai.transforms import (
     RandGaussianNoised,
     RandGridDistortiond,
     RandRotated,
+    RandRotate90d,
     RandZoomd,
     RandShiftIntensityd,
     ScaleIntensityRanged,
@@ -84,7 +85,6 @@ def perform_stratified_sampling(df, frac, strata_groups, split_col, output_path_
 
 def get_files(sampling_type, features, filename_stratified_sampling_test_csv, filename_stratified_sampling_full_csv,
               perform_stratified_sampling_full, seed, logger):
-
     """
     Fetch data files and return the training, internal validation and test files. The data directory should be
     organized as follows:
@@ -118,7 +118,6 @@ def get_files(sampling_type, features, filename_stratified_sampling_test_csv, fi
     patient_id_length = data_preproc_config.patient_id_length
     patient_id_col = data_preproc_config.patient_id_col
     data_dir = config.data_dir
-    patients_data_dir = config.patients_data_dir
     perform_test_run = config.perform_test_run
     train_frac = config.train_frac
     val_frac = config.val_frac
@@ -146,9 +145,9 @@ def get_files(sampling_type, features, filename_stratified_sampling_test_csv, fi
 
     # Create list of images and labels
     images_list, labels_list, features_list, patient_ids_list = list(), list(), list(), list()
-    #labels_unique = [x for x in os.listdir(data_dir) if not x.endswith('.csv')]
+    labels_unique = [x for x in os.listdir(data_dir) if not x.endswith('.csv')]
     # sort() to make sure that different platforms use the same order --> required for random.shuffle() later
-    #labels_unique.sort()
+    labels_unique.sort()
 
     # Get PatientIDs
     patient_ids_list = df_features[patient_id_col].values.tolist()
@@ -159,32 +158,22 @@ def get_files(sampling_type, features, filename_stratified_sampling_test_csv, fi
         df_features_i = df_features[df_features[patient_id_col] == patient_id]
         # Features
         features_list += [[float(str(x).replace(',', '.')) for x in y] for y in
-                          df_features_i[config.features_dl].values.tolist()]
+                          df_features_i[features].values.tolist()]
         # Endpoint
-        labels_list.append(int(float(df_features_i[data_preproc_config.endpoint].iloc[0])))
-    
+        labels_list.append(int(df_features_i[data_preproc_config.endpoint].iloc[0])) 
+
     assert len(patient_ids_list) == len(features_list) == len(labels_list)
     # Note: '0' in front of string is okay: int('0123') will become 123
-    # data_dicts = [
-    #     {'ct': os.path.join(data_dir, str(label_name), patient_id, data_preproc_config.filename_ct_npy),
-    #      'rtdose': os.path.join(data_dir, str(label_name), patient_id, data_preproc_config.filename_rtdose_npy),
-    #      'segmentation_map': os.path.join(data_dir, str(label_name), patient_id,
-    #                                       data_preproc_config.filename_segmentation_map_npy),
-    #      'features': feature_name,
-    #      'label': label_name,
-    #      'patient_id': patient_id}
-    #     for patient_id, feature_name, label_name in zip(patient_ids_list, features_list, labels_list)
-    #     if int(patient_id) not in exclude_patients
-    # ]
     data_dicts = [
-        {'ct': os.path.join(patients_data_dir, patient_id, data_preproc_config.filename_ct_npy),
-         'rtdose': os.path.join(patients_data_dir, patient_id, data_preproc_config.filename_rtdose_npy),
-         'segmentation_map': os.path.join(patients_data_dir, patient_id,
+        {'ct': os.path.join(data_dir, str(label_name), patient_id, data_preproc_config.filename_ct_npy),
+         'rtdose': os.path.join(data_dir, str(label_name), patient_id, data_preproc_config.filename_rtdose_npy),
+         'segmentation_map': os.path.join(data_dir, str(label_name), patient_id,
                                           data_preproc_config.filename_segmentation_map_npy),
-         'features': feature_values,
-         'label': label_values,
+         'features': feature_name,
+         'label': label_name,
          'patient_id': patient_id}
-        for patient_id, feature_values, label_values in zip(patient_ids_list, features_list, labels_list)
+        for patient_id, feature_name, label_name in zip(patient_ids_list, features_list, labels_list)
+        if int(patient_id) not in exclude_patients
     ]
 
     # Whether to perform random split or to perform stratified sampling
@@ -222,28 +211,29 @@ def get_files(sampling_type, features, filename_stratified_sampling_test_csv, fi
 
         # Make sure that files in the dataset folders comprehend with the label in filename_stratified_sampling_test_csv
         #print(df_split[patient_id_col].tolist())
-        # for l in labels_unique:
-
-        #     # patient_ids_l = [x.replace('.npy', '') for x in os.listdir(os.path.join(data_dir, l))]
-        #     patient_ids_l = os.listdir(os.path.join(data_dir, l))
-        #     #print(patient_ids_l)
-        #     patient_ids_l = [x for x in patient_ids_l if
-        #                      int(x) not in exclude_patients and x in df_split[patient_id_col].tolist()]
-        #     for p in patient_ids_l:
-        #         df_i = df_split[df_split[patient_id_col] == p]
-        #         print(df_i[config.endpoint])
-        #         print(l)
-        #         assert int(df_i[config.endpoint].values[0]) == int(l)
+        for l in labels_unique:
+            # patient_ids_l = [x.replace('.npy', '') for x in os.listdir(os.path.join(data_dir, l))]
+            patient_ids_l = os.listdir(os.path.join(data_dir, l))
+            #print(patient_ids_l)
+            patient_ids_l = [x for x in patient_ids_l if
+                             int(x) not in exclude_patients and x in df_split[patient_id_col].tolist()]
+            for p in patient_ids_l:
+                df_i = df_split[df_split[patient_id_col] == p]
+                assert int(df_i[data_preproc_config.endpoint].values[0]) == int(l)
 
         # Split
-        # total_size = len(df_split)
-        # df_train = df_split[df_split[split_col] == 'train']
-        # df_val = df_split[df_split[split_col] == 'val']
-        # df_test = df_split[df_split[split_col] == 'test']
+        total_size = len(df_split)
+        df_train = df_split[df_split[split_col] == 'train']
+        df_val = df_split[df_split[split_col] == 'val']
+        df_test = df_split[df_split[split_col] == 'test']
 
-        
-
-        
+        # Print stats
+        get_df_stats(df=df_split, groups=strata_groups, mode='full', frac=1, total_size=total_size, logger=logger)
+        get_df_stats(df=df_train, groups=strata_groups, mode='train', frac=train_frac, total_size=total_size,
+                     logger=logger)
+        get_df_stats(df=df_val, groups=strata_groups, mode='val', frac=val_frac, total_size=total_size, logger=logger)
+        get_df_stats(df=df_test, groups=strata_groups, mode='test', frac=1 - train_frac - val_frac,
+                     total_size=total_size, logger=logger)
 
         train_dict, val_dict, test_dict = list(), list(), list()
         for d_dict in data_dicts:
@@ -281,177 +271,8 @@ def get_files(sampling_type, features, filename_stratified_sampling_test_csv, fi
     else:
         raise ValueError('Invalid sampling_type: {}.'.format(sampling_type))
 
-    get_files_stats(train_dict, val_dict, test_dict, features, logger)
-
     return train_dict, val_dict, test_dict
 
-
-
-def get_files_2(config, logger):
-    """
-    Fetch data files and return the training, internal validation and test files. The data directory should be
-    organized as follows:
-    - data_dir:
-        stratified_sampling_test.csv  # with column 'Split' containing values 'train_val' (cross-validation) and 'test'
-        - patients_data_dir:
-            - patient_0
-                - foo.npy
-                - foofoo1.npy
-                    ...
-                - foofoofoofooN.npy
-            - patient_1
-                - bar.npy
-                - barbar1.npy
-                    ...
-                - barbarbarbarN.npy
-
-    Args:
-        sampling_type:
-        endpoint_list:
-        features:
-        filename_stratified_sampling_test_csv:
-        filename_stratified_sampling_full_csv:
-        perform_stratified_sampling_full:
-        seed:
-        logger:
-
-    Returns:
-        Training, internal validation and test files.
-    """
-    # Initialize variables
-    patient_id_col = data_preproc_config.patient_id_col
-    patient_id_length = data_preproc_config.patient_id_length
-    patients_data_dir = config.patients_data_dir
-    split_col = config.split_col
-
-    # Load features
-    df_features = pd.read_csv(os.path.join(config.data_dir, config.filename_stratified_sampling_test_csv), sep=';', decimal='.')
-    df_features[patient_id_col] = ['%0.{}d'.format(patient_id_length) % int(x) for x in df_features[patient_id_col]]
-
-    # Create list of images and labels_raw_train
-    images_list, label_values_list, features_list, patient_ids_list = list(), list(), list(), list()
-
-    # Get PatientIDs
-    patient_ids_list = df_features[patient_id_col].values.tolist()
-    # sort() to make sure that different platforms use the same order --> required for random.shuffle() later
-    patient_ids_list.sort()
-    for patient_id in patient_ids_list:
-        # Patient's features data
-        df_features_i = df_features[df_features[patient_id_col] == patient_id]
-        # Features
-        features_list += [[float(str(x).replace(',', '.')) for x in y] for y in
-                          df_features_i[config.features_dl].values.tolist()]
-        # Endpoint
-        label_values_list.append([int(df_features_i[x].iloc[0]) for x in config.endpoint_list])
-
-    assert len(patient_ids_list) == len(features_list) == len(label_values_list)
-    # Note: '0' in front of string is okay: int('0123') will become 123
-    data_dicts = [
-        {'ct': os.path.join(patients_data_dir, patient_id, data_preproc_config.filename_ct_npy),
-         'rtdose': os.path.join(patients_data_dir, patient_id, data_preproc_config.filename_rtdose_npy),
-         'segmentation_map': os.path.join(patients_data_dir, patient_id,
-                                          data_preproc_config.filename_segmentation_map_npy),
-         'features': feature_values,
-         'label_list': label_values,
-         'patient_id': patient_id}
-        for patient_id, feature_values, label_values in zip(patient_ids_list, features_list, label_values_list)
-    ]
-
-    # Whether to perform random split or to perform stratified sampling
-    if config.sampling_type == 'random':
-        # Select random subset for testing
-        if config.perform_test_run:
-            data_dicts = data_dicts[:config.n_samples]
-
-        # Training-internal_validation-test data split
-        patients_test = df_features[df_features[split_col] == 'test'][patient_id_col].tolist()
-        train_val_dict = [x for x in data_dicts if x['patient_id'] not in patients_test]
-        n_train = round(len(train_val_dict) * config.train_frac)
-
-        train_dict = train_val_dict[:n_train]
-        val_dict = train_val_dict[n_train:]
-        test_dict = [x for x in data_dicts if x['patient_id'] in patients_test]
-
-    elif config.sampling_type == 'stratified':
-        # Stratified sampling
-        path_filename = os.path.join(config.data_dir, config.filename_stratified_sampling_full_csv)
-        if not os.path.isfile(path_filename) or config.perform_stratified_sampling_full:
-            # Create stratified_sampling.csv if file does not exists, or recreate if requested
-            logger.my_print('Creating {}.'.format(path_filename))
-            # Create stratified samples for train and validation set
-            #perform_stratified_sampling()
-            perform_stratified_sampling(config=config, df=df_features, frac=config.val_frac,
-                                        output_path_filename=path_filename,  logger=logger)
-
-        # Load list of patients with split info
-        df_split = pd.read_csv(path_filename, sep=';')
-        df_split[patient_id_col] = ['%0.{}d'.format(patient_id_length) % int(x) for x in df_split[patient_id_col]]
-
-        # Print stats
-        get_all_df_stats(config=config, df_split=df_split, logger=logger)
-
-        train_dict, val_dict, test_dict = list(), list(), list()
-        for d_dict in data_dicts:
-            patient_id = d_dict['patient_id']
-            df_split_i = df_split[df_split[patient_id_col] == patient_id]
-            assert len(df_split_i) == 1
-            split_i = df_split_i['Split'].values[0]
-            if split_i == 'train':
-                train_dict.append(d_dict)
-            elif split_i == 'val':
-                val_dict.append(d_dict)
-            elif split_i == 'test':
-                test_dict.append(d_dict)
-            else:
-                raise ValueError('Invalid split_i: {}.'.format(split_i))
-
-        # assert len(df_features) == len(data_dicts) + len(exclude_patients) == len(df_split) + len(exclude_patients) == \
-        #        len(train_dict) + len(val_dict) + len(test_dict) + len(exclude_patients)
-        assert len(df_features) == len(data_dicts) == len(df_split) == len(train_dict) + len(val_dict) + len(test_dict)
-
-        # Select random subset for testing
-        if config.perform_test_run:
-            n_samples = config.n_samples
-            n_train = round(n_samples * config.train_frac)
-            n_val = math.ceil(n_samples * config.val_frac)
-            n_test = n_samples - n_train - n_val
-
-            random.shuffle(train_dict)
-            random.shuffle(val_dict)
-            random.shuffle(test_dict)
-
-            train_dict = train_dict[:n_train]
-            val_dict = val_dict[:n_val]
-            test_dict = test_dict[:n_test]
-
-    else:
-        raise ValueError('Invalid sampling_type: {}.'.format(config.sampling_type))
-    
-    return train_dict, val_dict, test_dict
-
-
-
-def get_all_df_stats(config, df_split, logger):
-    total_size = len(df_split)
-    split_col = config.split_col
-    df_train = df_split[df_split[split_col] == 'train']
-    df_val = df_split[df_split[split_col] == 'val']
-    df_test = df_split[df_split[split_col] == 'test']
-
-    test_frac = config.test_frac
-    if config.cv_folds == 1:
-        train_frac = config.train_frac
-        val_frac = config.val_frac
-    else: 
-        # in case of cross validation, the train_frac and val_frac are calculated based on the 
-        # test_frac and number of folds (i.e. they are not == what is in the config)
-        val_frac = (1-test_frac) / config.cv_folds
-        train_frac = 1 - test_frac - val_frac
-        
-    get_df_stats(config=config, df=df_split, mode='full', frac=1, total_size=total_size, logger=logger)
-    get_df_stats(config=config, df=df_train, mode='train', frac=train_frac, total_size=total_size, logger=logger)
-    get_df_stats(config=config, df=df_val, mode='val', frac=val_frac, total_size=total_size, logger=logger)
-    get_df_stats(config=config, df=df_test, mode='test', frac=test_frac, total_size=total_size, logger=logger)
 
 def get_files_stats(train_dict, val_dict, test_dict, features, logger):
     nr_of_decimals = config.nr_of_decimals
@@ -738,6 +559,8 @@ def get_transforms(perform_data_aug, modes_3d, modes_2d, data_aug_p, data_aug_st
             # 3D: (nchannels, H, W, D). Only `trilinear` possible for 5D input data
             RandRotated(keys=[concat_key], prob=data_aug_p, range_x=(np.pi / 24) * data_aug_strength,
                         align_corners=align_corners_exception_2d, padding_mode='border', mode=modes_2d),
+            RandRotate90d(keys=[concat_key], prob=data_aug_p, spatial_axes=(1, 2), max_k = 3),
+
             # 3D: (nchannels, H, W, D). Only `bicubic`, `nearest` and `bilinear` possible. `Trilinear` not available because
             # the rotation is done in 2 dimensions, so that every slice is rotated by the same amount.
             # Rand3DElasticd(keys=[concat_key], prob=data_aug_p, sigma_range=(5, 8), magnitude_range=(0, round(1 * data_aug_strength)),

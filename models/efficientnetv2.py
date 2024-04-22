@@ -186,7 +186,7 @@ class EffNetV2(nn.Module):
         # Initialize linear layers
         self.linear_layers = torch.nn.ModuleList()
         if (linear_units is None) or (len(linear_units) == 0):
-            self.out_layer = Output(in_features=output_channel + clinical_variables_linear_units[-1], out_features=num_classes,
+            self.classifier = Output(in_features=output_channel + clinical_variables_linear_units[-1], out_features=num_classes,
                                     bias=use_bias)
         else:
             linear_units = [output_channel] + linear_units
@@ -209,14 +209,14 @@ class EffNetV2(nn.Module):
             if (self.n_features > 0) and (clinical_variables_linear_units is not None):
                 # Add additional input units to the output layer if MLP output is concatenated at the last linear layer
                 if self.clinical_variables_position + 1 == len(linear_units) - 1:
-                    self.out_layer = Output(in_features=linear_units[-1] + clinical_variables_linear_units[-1],
+                    self.classifier = Output(in_features=linear_units[-1] + clinical_variables_linear_units[-1],
                                             out_features=num_classes, bias=use_bias)
                 else:
-                    self.out_layer = Output(in_features=linear_units[-1], out_features=num_classes, bias=use_bias)
+                    self.classifier = Output(in_features=linear_units[-1], out_features=num_classes, bias=use_bias)
             else:
-                self.out_layer = Output(in_features=linear_units[-1] + self.n_features, out_features=num_classes,
+                self.classifier = Output(in_features=linear_units[-1] + self.n_features, out_features=num_classes,
                                         bias=use_bias)
-            # self.out_layer.__class__.__name__ = 'Output'
+            # self.classifier.__class__.__name__ = 'Output'
 
 
     def forward(self, x, features):
@@ -242,7 +242,7 @@ class EffNetV2(nn.Module):
                     # Add features to a linear layer
                     x = torch.cat([x, features], dim=1)
 
-        x = self.out_layer(x)
+        x = self.classifier(x)
         return x
 
     def _initialize_weights(self):

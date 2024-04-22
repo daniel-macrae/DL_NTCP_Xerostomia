@@ -149,7 +149,7 @@ filename_data_preproc_array_logging_txt = 'data_preproc_array_logging.txt'
 filename_data_preproc_features_logging_txt = 'data_preproc_features_logging.txt'
 filename_endpoints_csv = 'endpoints.csv'
 filename_patient_id_npy = '{patient_id}.npy'  # model's input (Numpy array), concatenation of: CT, RTDOSE and RTSTRUCT
-filename_features_csv = 'features.csv'
+filename_features_csv = 'patients_all_features.csv'
 filename_stratified_sampling_csv = 'stratified_sampling.csv'
 # segmentation arrays
 filename_overview_structures_count_csv = 'overview_structures_count.csv'
@@ -168,60 +168,59 @@ filename_main_logging_txt = 'main_logging.txt'
 ## NOTE: DYSPHAGIA
 """
 patient_id_col = 'PatientID'
-endpoint = 'Dysphagia_6MO'
+endpoint = 'Dysphagia_M06'
 baseline_col = []
 submodels_features = [
-    ['OralCavity_Ext_meandose', 'PCM_Med_meandose', 'PCM_Inf_meandose', 'BSLtox_grade0_1', 'BSLtox_grade2', 'BSLtox_grade3_4', 'Loctum_Pharynx', 'Loctum_Larynx', 'Loctum_OC'],
-    ['PCM_Sup_meandose', 'PCM_Med_meandose', 'PCM_Inf_meandose', 'BSLtox_grade0_1', 'BSLtox_grade2', 'BSLtox_grade3_4', 'Loctum_Pharynx', 'Loctum_Larynx', 'Loctum_OC'],
+        ['OralCavity_Ext_meandose', 'PCM_Med_meandose', 'PCM_Inf_meandose', 'Dysphagia_W01_Grade2', 'Dysphagia_W01_Grade3_4', 'Loctum2_Pharynx', 'Loctum2_Larynx'],  # Dysphagia submodel 1
+        ['PCM_Sup_meandose', 'PCM_Med_meandose', 'PCM_Inf_meandose', 'Dysphagia_W01_Grade2', 'Dysphagia_W01_Grade3_4', 'Loctum2_Pharynx', 'Loctum2_Larynx']          # Dysphagia submodel 2
 ]  # Features of submodels. Should be a list of lists. len(submodels_features) = nr_of_submodels. If None, then
 # no fitting of submodels.
-features = ['OralCavity_Ext_meandose', 'PCM_Sup_meandose', 'PCM_Med_meandose', 'PCM_Inf_meandose', 
-            'BSLtox_grade2', 'BSLtox_grade3_4', 'Loctum_Pharynx', 'Loctum_Larynx']  # Features of final model. Elements in submodels_features should
-# be a subset of `features`, i.e. submodels_features can have more distinct features than the final model.
+features = ['OralCavity_Ext_meandose', 'PCM_Sup_meandose', 'PCM_Med_meandose', 'PCM_Inf_meandose', 'Dysphagia_W01_Grade2', 'Dysphagia_W01_Grade3_4', 'Loctum2_Pharynx', 'Loctum2_Larynx'] # Dysphagia
+    # be a subset of `features`, i.e. submodels_features can have more distinct features than the final model.
 lr_coefficients = None  # [-4.5710, 0.0341, 0.0267, 0.0107, 0.0151, 1.0627, 1.4610, -0.7115, -0.8734]  # Values starting with coefficient for `intercept`,
 # followed by coefficients of `features` (in the same order). If None, then no predefined coefficients will be used.
 # on our own training dataset
-ext_features = ['CT+C_available', 'CT_Artefact', 'Photons', 'Split']
+ext_features = ['CT+C', 'CT_Artefact', 'Photons', 'Split']
 """
 
 ## NOTE: XEROSTOMIA
-
+"""
 # data_preproc.py: filename_endpoints_csv
 patient_id_col = 'PatientID'
-endpoint = 'HN35_Xerostomia_M12_class'
+endpoint = 'Xerostomia_M06'
 baseline_col = 'HN35_Xerostomia_W01_class'
 submodels_features = [
-    ['Submandibular_meandose', 'HN35_Xerostomia_W01_little', 'HN35_Xerostomia_W01_moderate_to_severe'],
-    ['Parotid_meandose_adj', 'HN35_Xerostomia_W01_little', 'HN35_Xerostomia_W01_moderate_to_severe'],
+    ['Submandibular_meandose', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg'],
+    ['Parotid_meandose', 'Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg'],
   ]
-
 
   # Features of submodels. Should be a list of lists. len(submodels_features) = nr_of_submodels. If None, then
 # no fitting of submodels.
-features = ['Submandibular_meandose', 'Parotid_meandose_adj','HN35_Xerostomia_W01_little',
-            'HN35_Xerostomia_W01_moderate_to_severe']  # Features of final model. Elements in submodels_features should
+features = ['Submandibular_meandose', 'Parotid_meandose','Xerostomia_W01_Een_beetje', 'Xerostomia_W01_Nogal_Heel_erg']  # Features of final model. Elements in submodels_features should
 # be a subset of `features`, i.e. submodels_features can have more distinct features than the final model.
 lr_coefficients = None  # [-2.9032, 0.0193, 0.1054, 0.5234, 1.2763]  # Values starting with coefficient for `intercept`,
 # followed by coefficients of `features` (in the same order). If None, then no predefined coefficients will be used.
-ext_features = ['HN35_Xerostomia_W01_not_at_all', 'CT+C_available', 'CT_Artefact', 'Photons', 'Loctum2_v2', 'Split',
+ext_features = ['Xerostomia_W01_Helemaal_niet', 'CT+C_available', 'CT_Artefact', 'Photons', 'Loctum2_v2', 'Split',
                 'Gender', 'Age']
 """
 
+
 # NOTE: TASTE
+
 patient_id_col = 'PatientID'
 endpoint = 'Taste_M06'
 baseline_col = 'Taste_W01'
 submodels_features = [
-    ['Parotid_meandose', 'OralCavity_Ext_meandose', 'LEEFTIJD'],
+    ['Parotid_meandose', 'OralCavity_Ext_meandose', 'Age'],
 ]  # Features of submodels. Should be a list of lists. len(submodels_features) = nr_of_submodels. If None, then
 # no fitting of submodels.
-features = ['Parotid_meandose', 'OralCavity_Ext_meandose', 'LEEFTIJD']  # Features of final model. Elements in submodels_features should
+features = ['Parotid_meandose', 'OralCavity_Ext_meandose', 'Age']  # Features of final model. Elements in submodels_features should
 # be a subset of `features`, i.e. submodels_features can have more distinct features than the final model.
 #####
 lr_coefficients = None  # [-2.9032, 0.0193, 0.1054, 0.5234, 1.2763]  # Values starting with coefficient for `intercept`,
 # followed by coefficients of `features` (in the same order). If None, then no predefined coefficients will be used.
-ext_features = ['Artefact', 'LEEFTIJD']
-"""
+ext_features = ['CT_Artefact', 'Age']
+
 
 # (Stratified Sampling)
 # data_preproc.py, check_data_preproc_ct_segmentation_map.py: relevant segmentation structures

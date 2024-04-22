@@ -51,6 +51,8 @@ def preprocess_label(df):
 
     if len(unique_values) == 2:
         # unique_values is expected to be [0, 1]
+        df = df.apply(lambda x: int(float(x)))
+        unique_values = df.unique()
         unique_values.sort()
         assert np.all(unique_values == pd.Series([0, 1]))
 
@@ -120,7 +122,7 @@ def run_logistic_regression(features_csv, patient_id_col, baseline_col, submodel
 
     # Load features + labels
     df = pd.read_csv(features_csv, sep=';', decimal=',')
-    df.loc[:, patient_id_col] = df.loc[:, patient_id_col].apply(lambda x: '%0.{}d'.format(patient_id_length) % x)
+    df.loc[:, patient_id_col] = df.loc[:, patient_id_col].astype(int).apply(lambda x: '%0.{}d'.format(patient_id_length) % x)
 
     # Update endpoint
     df.loc[:, endpoint] = preprocess_label(df.loc[:, endpoint])
@@ -140,6 +142,8 @@ def run_logistic_regression(features_csv, patient_id_col, baseline_col, submodel
 
     # Construct endpoints
     train_y = df_train.loc[:, endpoint]
+    train_y = train_y.to_numpy().astype(float)
+
     n_train = len(train_y)
     n_train_0 = sum(train_y == 0)
     n_train_1 = sum(train_y == 1)
