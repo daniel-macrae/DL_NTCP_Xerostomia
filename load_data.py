@@ -158,24 +158,17 @@ def get_files(sampling_type, features, filename_stratified_sampling_test_csv, fi
         # Patient's features data
         df_features_i = df_features[df_features[patient_id_col] == patient_id]
         # Features
-        features_list += [[float(str(x).replace(',', '.')) for x in y] for y in
-                          df_features_i[config.features_dl].values.tolist()]
+        features_list.append([[float(str(x).replace(',', '.')) for x in y] for y in
+                          df_features_i[config.features_dl].values.tolist()])
         # Endpoint
         labels_list.append(int(float(df_features_i[data_preproc_config.endpoint].iloc[0])))
     
+    # print(len(patient_ids_list))
+    # print(len(labels_list))
+    # print(len(features_list))
+
     assert len(patient_ids_list) == len(features_list) == len(labels_list)
     # Note: '0' in front of string is okay: int('0123') will become 123
-    # data_dicts = [
-    #     {'ct': os.path.join(data_dir, str(label_name), patient_id, data_preproc_config.filename_ct_npy),
-    #      'rtdose': os.path.join(data_dir, str(label_name), patient_id, data_preproc_config.filename_rtdose_npy),
-    #      'segmentation_map': os.path.join(data_dir, str(label_name), patient_id,
-    #                                       data_preproc_config.filename_segmentation_map_npy),
-    #      'features': feature_name,
-    #      'label': label_name,
-    #      'patient_id': patient_id}
-    #     for patient_id, feature_name, label_name in zip(patient_ids_list, features_list, labels_list)
-    #     if int(patient_id) not in exclude_patients
-    # ]
     data_dicts = [
         {'ct': os.path.join(patients_data_dir, patient_id, data_preproc_config.filename_ct_npy),
          'rtdose': os.path.join(patients_data_dir, patient_id, data_preproc_config.filename_rtdose_npy),
@@ -220,35 +213,12 @@ def get_files(sampling_type, features, filename_stratified_sampling_test_csv, fi
         # Exclude patients
         df_split = df_split[~df_split[patient_id_col].astype(np.int64).isin(exclude_patients)]
 
-        # Make sure that files in the dataset folders comprehend with the label in filename_stratified_sampling_test_csv
-        #print(df_split[patient_id_col].tolist())
-        # for l in labels_unique:
-
-        #     # patient_ids_l = [x.replace('.npy', '') for x in os.listdir(os.path.join(data_dir, l))]
-        #     patient_ids_l = os.listdir(os.path.join(data_dir, l))
-        #     #print(patient_ids_l)
-        #     patient_ids_l = [x for x in patient_ids_l if
-        #                      int(x) not in exclude_patients and x in df_split[patient_id_col].tolist()]
-        #     for p in patient_ids_l:
-        #         df_i = df_split[df_split[patient_id_col] == p]
-        #         print(df_i[config.endpoint])
-        #         print(l)
-        #         assert int(df_i[config.endpoint].values[0]) == int(l)
-
-        # Split
-        # total_size = len(df_split)
-        # df_train = df_split[df_split[split_col] == 'train']
-        # df_val = df_split[df_split[split_col] == 'val']
-        # df_test = df_split[df_split[split_col] == 'test']
-
-        
-
-        
 
         train_dict, val_dict, test_dict = list(), list(), list()
         for d_dict in data_dicts:
             patient_id = d_dict['patient_id']
             df_split_i = df_split[df_split[patient_id_col] == patient_id]
+            #print(patient_id, len(df_split_i))
             assert len(df_split_i) == 1
             split_i = df_split_i['Split'].values[0]
             if split_i == 'train':
@@ -983,12 +953,14 @@ def main(train_dict, val_dict, test_dict, features, perform_data_aug, data_aug_p
                                                       seg_target_labels=seg_target_labels, device=device,
                                                       logger=logger)
 
-    # Determine normalization parameters
-    train_dl_normalization = get_normalization_dataloader(train_dict=train_dict, val_transforms=val_transforms)
-    norm_mean, norm_std = get_mean_and_std(dataloader=train_dl_normalization)
-    logger.my_print('Normalization mean: {}'.format(norm_mean))
-    logger.my_print('Normalization std: {}'.format(norm_std))
-    del train_dl_normalization
+    # # Determine normalization parameters
+    # train_dl_normalization = get_normalization_dataloader(train_dict=train_dict, val_transforms=val_transforms)
+    # norm_mean, norm_std = get_mean_and_std(dataloader=train_dl_normalization)
+    # logger.my_print('Normalization mean: {}'.format(norm_mean))
+    # logger.my_print('Normalization std: {}'.format(norm_std))
+    # del train_dl_normalization
+
+    norm_mean, norm_std = [1,0], [1,0]
 
     # Get training, internal validation and test dataloaders
     train_dl, val_dl, test_dl, train_ds, dl_class, train_dl_args_dict = get_dataloaders(
